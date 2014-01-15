@@ -22,7 +22,16 @@ public class ClassInfoBuilder extends AModelBuilder<ClassInfo> {
     }
 
     protected ClassInfo createOntoItem(String id) {
-        String query = "select distinct (<" + id + "> as ?id) ?label ?parentClass where { OPTIONAL{<" + id + "> rdfs:label ?label.} OPTIONAL{<" + id + "> rdfs:subClassOf ?parentClass.}}";
+        String query = "select distinct (<" + id + "> as ?id) ?label ?parentClass " +
+                "where { " +
+                "   OPTIONAL {" +
+                "       <" + id + "> rdfs:label ?label." +
+                "        FILTER (" +
+                "           (langMatches(lang(?label), \"ru\") || LANG(?label) = \"\")" +
+                "       ) " +
+                "   } " +
+                "   OPTIONAL{<" + id + "> rdfs:subClassOf ?parentClass.}" +
+                "}";
         QueryEngineHTTP engine = requestInfo.getQueryEngine(query);
         /*QueryExecution qe = QueryExecutionFactory.sparqlService("", );*/
         try {

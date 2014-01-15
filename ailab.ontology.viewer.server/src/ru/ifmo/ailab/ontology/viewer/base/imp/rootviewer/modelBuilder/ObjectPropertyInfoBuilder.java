@@ -20,7 +20,15 @@ public class ObjectPropertyInfoBuilder extends AModelBuilder<ObjectPropertyInfo>
     }
 
     protected ObjectPropertyInfo createOntoItem(String id) {
-        String query = "select distinct (<" + id + "> as ?id) ?label where {OPTIONAL{<" + id + "> rdfs:label ?label.}}";
+        String query = "select distinct (<" + id + "> as ?id) ?label where " +
+                "{" +
+                "   OPTIONAL {" +
+                "       <" + id + "> rdfs:label ?label." +
+                "        FILTER (" +
+                "           (langMatches(lang(?label), \"ru\") || LANG(?label) = \"\")" +
+                "       ) " +
+                "   } " +
+                "}";
         QueryEngineHTTP engine = requestInfo.getQueryEngine(query);
         try {
             ResultSet rs = engine.execSelect();

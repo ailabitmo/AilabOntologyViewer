@@ -30,7 +30,16 @@ public class SimpleOntoObjectBuilder extends AModelBuilder<SimpleOntoObject> {
         try {
             SimpleOntoObject toRet = new SimpleOntoObject(id);
             //1. Сначала берем основные параметры - лейбл и класс
-            String query = "select distinct (<" + id + "> as ?id) ?label ?class where { OPTIONAL{<" + id + "> rdfs:label ?label.} OPTIONAL{<" + id + "> rdf:type ?class.}}";
+            String query = "select distinct (<" + id + "> as ?id) ?label ?class " +
+                    "where { " +
+                    "   OPTIONAL {" +
+                    "       <" + id + "> rdfs:label ?label." +
+                    "        FILTER (" +
+                    "           (langMatches(lang(?label), \"ru\") || LANG(?label) = \"\")" +
+                    "       ) " +
+                    "   } " +
+                    "   OPTIONAL{<" + id + "> rdf:type ?class.}" +
+                    "}";
             engine = requestInfo.getQueryEngine(query);
             ResultSet rs = engine.execSelect();
             toRet.setObjClass(new HashSet<ClassInfo>());
@@ -45,7 +54,11 @@ public class SimpleOntoObjectBuilder extends AModelBuilder<SimpleOntoObject> {
             engine.close();
 
             //2. Берем все датапроперти для объекта
-            query = "select distinct ?dataProperty ?dpropertyValue where { <" + id + "> ?dataProperty ?dpropertyValue. ?dataProperty a owl:DatatypeProperty}";
+            query = "select distinct ?dataProperty ?dpropertyValue " +
+                    "where { " +
+                    "   <" + id + "> ?dataProperty ?dpropertyValue. " +
+                    "   ?dataProperty a owl:DatatypeProperty" +
+                    "}";
             engine = requestInfo.getQueryEngine(query);
             rs = engine.execSelect();
             toRet.setDataProps(new HashSet<DataPropertyValue>());
