@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/ailab.ontology.viewer.server/ailab.ontology.editor.iml" filepath="$PROJECT_DIR$/ailab.ontology.viewer.server/ailab.ontology.editor.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ailab.ontology.viewer.html/ailab.ontology.viewer.html.iml" filepath="$PROJECT_DIR$/ailab.ontology.viewer.html/ailab.ontology.viewer.html.iml" />
+    </modules>
+  </component>
+</project>
+

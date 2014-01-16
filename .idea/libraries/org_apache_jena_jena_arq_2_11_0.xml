@@ -1,0 +1,21 @@
+<component name="libraryTable">
+  <library name="org.apache.jena:jena-arq:2.11.0" type="repository">
+    <properties maven-id="org.apache.jena:jena-arq:2.11.0" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/jena-arq-2.11.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/jena-core-2.11.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/jena-iri-1.0.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/slf4j-api-1.6.4.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/slf4j-log4j12-1.6.4.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/log4j-1.2.16.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/xercesImpl-2.11.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/xml-apis-1.4.01.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/httpclient-4.2.3.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/httpcore-4.2.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/commons-codec-1.6.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/jcl-over-slf4j-1.6.4.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

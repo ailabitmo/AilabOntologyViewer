@@ -1,0 +1,18 @@
+<component name="ArtifactManager">
+  <artifact type="exploded-war" name="ailab.ontology.viewer.web:exploded">
+    <output-path>$PROJECT_DIR$/out/artifacts/ailab_ontology_viewer_web_exploded</output-path>
+    <root id="root">
+      <element id="javaee-facet-resources" facet="ailab.ontology.editor/web/Web" />
+      <element id="directory" name="WEB-INF">
+        <element id="directory" name="classes">
+          <element id="module-output" name="ailab.ontology.editor" />
+          <element id="module-output" name="generalLib" />
+        </element>
+        <element id="directory" name="lib">
+          <element id="file-copy" path="$PROJECT_DIR$/lib/generalLib.jar" />
+          <element id="library" level="project" name="org.apache.jena:jena-arq:2.11.0" />
+        </element>
+      </element>
+    </root>
+  </artifact>
+</component>

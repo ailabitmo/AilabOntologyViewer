@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="war" name="aov">
+    <output-path>$PROJECT_DIR$/out/artifacts/aov</output-path>
+    <root id="archive" name="aov.war">
+      <element id="artifact" artifact-name="ailab.ontology.viewer.web:exploded" />
+      <element id="dir-copy" path="$PROJECT_DIR$/ailab.ontology.viewer.html" />
+    </root>
+  </artifact>
+</component>
