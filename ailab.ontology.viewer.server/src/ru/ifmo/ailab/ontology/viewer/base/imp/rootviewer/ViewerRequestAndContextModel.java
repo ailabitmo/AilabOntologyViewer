@@ -18,6 +18,8 @@ public class ViewerRequestAndContextModel extends ARequestAndContextWithEndpoint
 
     String idOfRootInstance;
 
+    String preferedLanguage = "ru";
+
     UtilStructures utilsAndCache ;
 
     public String getIdOfRootInstance() {
@@ -54,5 +56,9 @@ public class ViewerRequestAndContextModel extends ARequestAndContextWithEndpoint
     @Override
     public String getRequestStringDescription() {
         return "format: endpoint$idOfRootInstance[$login$password] login|password - необязательные, idOfRootInstance - идентификатор корневой сущности, для которой вызывается просмотровщик";
+    }
+
+    public String getPreferedLanguage() {
+        return preferedLanguage;
     }
 }

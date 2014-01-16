@@ -26,7 +26,7 @@ public class DataPropertyInfoBuilder extends AModelBuilder<DataPropertyInfo> {
                 "   OPTIONAL {" +
                 "       <" + id + "> rdfs:label ?label." +
                 "        FILTER (" +
-                "           (langMatches(lang(?label), \"ru\") || LANG(?label) = \"\")" +
+                "           (langMatches(lang(?label), \"" + requestInfo.getPreferedLanguage() + "\") || LANG(?label) = \"\")" +
                 "       ) " +
                 "   } " +
                 "}";

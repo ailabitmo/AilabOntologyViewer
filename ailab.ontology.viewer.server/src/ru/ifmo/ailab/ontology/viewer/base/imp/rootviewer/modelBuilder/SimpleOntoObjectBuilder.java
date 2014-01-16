@@ -35,7 +35,7 @@ public class SimpleOntoObjectBuilder extends AModelBuilder<SimpleOntoObject> {
                     "   OPTIONAL {" +
                     "       <" + id + "> rdfs:label ?label." +
                     "        FILTER (" +
-                    "           (langMatches(lang(?label), \"ru\") || LANG(?label) = \"\")" +
+                    "           (langMatches(lang(?label), \"" + requestInfo.getPreferedLanguage() + "\") || LANG(?label) = \"\")" +
                     "       ) " +
                     "   } " +
                     "   OPTIONAL{<" + id + "> rdf:type ?class.}" +
