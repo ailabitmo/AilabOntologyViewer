@@ -1,8 +1,9 @@
 package ru.ifmo.ailab.ontology.viewer.base.imp.mirror;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.spb.kpit.kivan.Networking.NetworkingUtils;
 import ru.ifmo.ailab.ontology.viewer.base.interfaces.IProcessor;
-import ru.ifmo.ailab.ontology.viewer.base.utils.Logger;
 
 /**
  * IDEA
@@ -17,7 +18,7 @@ public class MirrorProcessor implements IProcessor<MirrorRequestAndContextModel,
         StringBuilder requestString = new StringBuilder();
 
         requestString.append(input.getEndpoint()).append(input.getSparqlRequest());
-        Logger.debug(requestString.toString());
+        logger.debug(requestString.toString());
 
         String result = NetworkingUtils.sendContentToUrl(input.getEndpoint(), input.getSparqlRequest(), "utf-8", 10000, 3, null);
 
@@ -29,4 +30,5 @@ public class MirrorProcessor implements IProcessor<MirrorRequestAndContextModel,
             queryEngineHTTP.setBasicAuthentication(input.getLogin(), input.getPassword() != null ? input.getPassword().toCharArray() : "".toCharArray());
 
         Model ml = queryEngineHTTP.execConstruct();*/
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
 }

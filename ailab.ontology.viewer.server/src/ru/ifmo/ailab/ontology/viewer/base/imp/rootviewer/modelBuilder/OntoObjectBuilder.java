@@ -2,10 +2,11 @@ package ru.ifmo.ailab.ontology.viewer.base.imp.rootviewer.modelBuilder;
 
 import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.sparql.engine.http.QueryEngineHTTP;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.ifmo.ailab.ontology.viewer.base.imp.rootviewer.ViewerRequestAndContextModel;
 import ru.ifmo.ailab.ontology.viewer.base.imp.rootviewer.ontoModel.*;
 import ru.ifmo.ailab.ontology.viewer.base.imp.rootviewer.ontoModel.utils.UtilStructures;
-import ru.ifmo.ailab.ontology.viewer.base.utils.Logger;
 import ru.ifmo.ailab.ontology.viewer.base.utils.MyQuerySolution;
 
 import java.util.HashSet;
@@ -33,16 +34,16 @@ public class OntoObjectBuilder extends AModelBuilder<OntoObject> {
 
         try {
             //1. Берем входящие обжект проперти
-            String query = "select distinct ?objPropertyVal ?objProperty where { ?objPropertyVal ?objProperty <" + id + ">. ?objProperty a owl:ObjectProperty} LIMIT 200";
+            String query = DEFAULT_PREFIX + "select distinct ?objPropertyVal ?objProperty where { ?objPropertyVal ?objProperty <" + id + ">. ?objProperty a owl:ObjectProperty} LIMIT 200";
             toRet.setInObjectProperties(processObjProperies(query));
 
             //2. Берем исходящие обжект проперти
-            query = "select distinct ?objPropertyVal ?objProperty where {<" + id + ">  ?objProperty ?objPropertyVal . ?objProperty a owl:ObjectProperty} LIMIT 200";
+            query = DEFAULT_PREFIX + "select distinct ?objPropertyVal ?objProperty where {<" + id + ">  ?objProperty ?objPropertyVal . ?objProperty a owl:ObjectProperty} LIMIT 200";
             toRet.setOutObjectProperties(processObjProperies(query));
 
             return toRet;
         } catch (Exception e) {
-            Logger.exception(e);
+            logger.error("Exception", e);
         }
         return null;
     }
@@ -68,4 +69,5 @@ public class OntoObjectBuilder extends AModelBuilder<OntoObject> {
         engine.close();
         return toRet;
     }
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
 }

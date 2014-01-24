@@ -2,13 +2,14 @@ package ru.ifmo.ailab.ontology.viewer.base.imp.rootviewer.modelBuilder;
 
 import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.sparql.engine.http.QueryEngineHTTP;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.ifmo.ailab.ontology.viewer.base.imp.rootviewer.ViewerRequestAndContextModel;
 import ru.ifmo.ailab.ontology.viewer.base.imp.rootviewer.ontoModel.ClassInfo;
 import ru.ifmo.ailab.ontology.viewer.base.imp.rootviewer.ontoModel.DataPropertyInfo;
 import ru.ifmo.ailab.ontology.viewer.base.imp.rootviewer.ontoModel.DataPropertyValue;
 import ru.ifmo.ailab.ontology.viewer.base.imp.rootviewer.ontoModel.SimpleOntoObject;
 import ru.ifmo.ailab.ontology.viewer.base.imp.rootviewer.ontoModel.utils.UtilStructures;
-import ru.ifmo.ailab.ontology.viewer.base.utils.Logger;
 import ru.ifmo.ailab.ontology.viewer.base.utils.MyQuerySolution;
 
 import java.util.HashSet;
@@ -27,10 +28,12 @@ public class SimpleOntoObjectBuilder extends AModelBuilder<SimpleOntoObject> {
     @Override
     protected SimpleOntoObject createOntoItem(String id) {
         QueryEngineHTTP engine = null;
+        String query = null;
         try {
             SimpleOntoObject toRet = new SimpleOntoObject(id);
             //1. Сначала берем основные параметры - лейбл и класс
-            String query = "select distinct (<" + id + "> as ?id) ?label ?class " +
+
+            query = DEFAULT_PREFIX + "select distinct (<" + id + "> as ?id) ?label ?class " +
                     "where { " +
                     "   OPTIONAL {" +
                     "       <" + id + "> rdfs:label ?label." +
@@ -54,7 +57,7 @@ public class SimpleOntoObjectBuilder extends AModelBuilder<SimpleOntoObject> {
             engine.close();
 
             //2. Берем все датапроперти для объекта
-            query = "select distinct ?dataProperty ?dpropertyValue " +
+            query = DEFAULT_PREFIX + "select distinct ?dataProperty ?dpropertyValue " +
                     "where { " +
                     "   <" + id + "> ?dataProperty ?dpropertyValue. " +
                     "   ?dataProperty a owl:DatatypeProperty" +
@@ -72,7 +75,7 @@ public class SimpleOntoObjectBuilder extends AModelBuilder<SimpleOntoObject> {
             }
             return toRet;
         } catch (Exception e) {
-            Logger.exception(e);
+            logger.error("Exception executing" + query, e);
         } finally {
             if (engine != null) engine.close();
         }
@@ -83,4 +86,5 @@ public class SimpleOntoObjectBuilder extends AModelBuilder<SimpleOntoObject> {
     protected void addToUtilStructures(UtilStructures us, SimpleOntoObject item) {
         us.addObject(item);
     }
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
 }
