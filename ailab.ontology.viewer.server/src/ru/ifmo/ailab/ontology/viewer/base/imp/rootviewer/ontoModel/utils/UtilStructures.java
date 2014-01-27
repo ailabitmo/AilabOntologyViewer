@@ -13,6 +13,7 @@ import java.util.Set;
  * : Kivan
  * : 08.01.14
  * : 12:28
+ * %%% Вспомогательные структуры для генерации JSON ответа клиенту.
  */
 public class UtilStructures {
 

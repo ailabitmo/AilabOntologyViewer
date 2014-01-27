@@ -5,6 +5,8 @@ package ru.ifmo.ailab.ontology.viewer.base.imp.rootviewer.ontoModel.utils;
  * : Kivan
  * : 07.01.14
  * : 17:47
+ *
+ * %%% Экземпляр онтологического объекта (есть лейбл)
  */
 public abstract class OntoItem extends ObjectWithId {
     String label;

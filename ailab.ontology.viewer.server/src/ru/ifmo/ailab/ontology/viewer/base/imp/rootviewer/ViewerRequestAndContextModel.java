@@ -13,6 +13,8 @@ import java.util.List;
  * : Kivan
  * : 07.01.14
  * : 14:51
+ *
+ * %%% Модель запроса и контекста для просмотровщика
  */
 public class ViewerRequestAndContextModel extends ARequestAndContextWithEndpoint<ViewerRequestAndContextModel> {
 

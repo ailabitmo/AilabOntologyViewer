@@ -7,6 +7,8 @@ import java.util.Set;
  * : Kivan
  * : 07.01.14
  * : 17:36
+ *
+ * %%% Модель: онтологический объект
  */
 public class OntoObject extends SimpleOntoObject {
     Set<ObjectPropertyValue> inObjectProperties = null;

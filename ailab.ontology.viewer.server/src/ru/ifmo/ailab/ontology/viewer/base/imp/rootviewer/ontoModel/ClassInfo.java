@@ -7,6 +7,8 @@ import ru.ifmo.ailab.ontology.viewer.base.imp.rootviewer.ontoModel.utils.OntoIte
  * : Kivan
  * : 07.01.14
  * : 17:37
+ *
+ * %%% Модель: информация о классе
  */
 public class ClassInfo extends OntoItem {
     ClassInfo parentClass;

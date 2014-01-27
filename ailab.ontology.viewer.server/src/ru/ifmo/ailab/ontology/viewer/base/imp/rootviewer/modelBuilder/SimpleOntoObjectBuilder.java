@@ -18,6 +18,8 @@ import java.util.HashSet;
  * : Kivan
  * : 07.01.14
  * : 20:03
+ *
+ * %%% Построитель модели простого экземпляра (без объектных связей) по запросу к хранилищу.
  */
 public class SimpleOntoObjectBuilder extends AModelBuilder<SimpleOntoObject> {
     public SimpleOntoObjectBuilder(ViewerRequestAndContextModel request) {

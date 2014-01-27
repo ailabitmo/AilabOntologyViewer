@@ -10,7 +10,7 @@ import java.util.Set;
  * : 07.01.14
  * : 19:57
  *
- * Это объект с неполной информацией - отсутствуют обжект проперти
+ * %%% Модель: объект с неполной информацией - отсутствуют объектные связи
  */
 public class SimpleOntoObject extends OntoItem {
     Set<ClassInfo> objClasses;

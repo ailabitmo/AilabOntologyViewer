@@ -5,6 +5,8 @@ package ru.ifmo.ailab.ontology.viewer.base.imp.rootviewer.ontoModel;
  * : Kivan
  * : 07.01.14
  * : 19:50
+ *
+ * %%% Модель: информация о значении свойства объекта
  */
 public class ObjectPropertyValue{
     ObjectPropertyInfo property;

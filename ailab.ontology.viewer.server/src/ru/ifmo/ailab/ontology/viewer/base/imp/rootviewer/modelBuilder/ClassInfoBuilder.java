@@ -14,6 +14,8 @@ import ru.ifmo.ailab.ontology.viewer.base.utils.MyQuerySolution;
  * : Kivan
  * : 07.01.14
  * : 20:06
+ *
+ * %%% Построитель модели информации о классе по запросу к хранилищу.
  */
 public class ClassInfoBuilder extends AModelBuilder<ClassInfo> {
 

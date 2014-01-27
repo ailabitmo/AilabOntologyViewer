@@ -13,6 +13,8 @@ import ru.ifmo.ailab.ontology.viewer.base.utils.Logger;
  * : Kivan
  * : 07.01.14
  * : 17:52
+ *
+ * %%% Абстрактный класс, отвечающий за формирование модели по онтологии.
  */
 public abstract class AModelBuilder<OI extends OntoItem> {
 

@@ -6,6 +6,8 @@ package ru.ifmo.ailab.ontology.viewer.base.imp.rootviewer.ontoModel.utils;
  * : Kivan
  * : 07.01.14
  * : 17:38
+ *
+ * %%% Нечто с идентификатором строкой
  */
 public class ObjectWithId extends ItemWithId {
     String id;

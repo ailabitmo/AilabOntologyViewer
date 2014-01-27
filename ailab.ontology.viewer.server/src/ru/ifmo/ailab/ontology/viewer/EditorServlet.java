@@ -30,6 +30,8 @@ import java.util.*;
  * : Kivan
  * : 06.01.14
  * : 11:43
+ *
+ * %%% Основной сервлет обработчик
  */
 public class EditorServlet extends HttpServlet {
     //1 - request, 2 - response, 3 - processor
@@ -136,7 +138,11 @@ public class EditorServlet extends HttpServlet {
         } finally {
             /*profiler.end("EditorServlet main");
             Logger.debug(profiler.getInfo());*/
-            if (wr != null) wr.close();
+            try {
+                if (wr != null) wr.close();
+            } catch (Exception e) {
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            }
         }
     }
 }

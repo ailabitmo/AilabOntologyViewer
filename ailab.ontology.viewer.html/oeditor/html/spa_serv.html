@@ -1,0 +1,97 @@
+<meta charset="utf-8">
+<html>
+<head>
+    <title> SPARQL JavaScript </title>
+    <script src="../js/libs/d3.v3.js"></script>
+    <script src="../js/libs/jquery-2.0.2.js"></script>
+    <script src="../js/libs/primitives.js"></script>
+    <script>
+
+    </script>
+</head>
+
+<body>
+<div id="log">
+    <h1 style="color: green; font-family: Arial,serif; font-weight: bold">LOG</h1>
+</div>
+
+<div id="input">
+    <input id='endP' size="100" value="http://dbpedia.org/sparql"/>
+    <input id='defaultgraph' size="100" value="http://dbpedia.org"/>
+    <textarea id='inputTA' cols="200" rows="20"></textarea>
+    <button onclick="processRequest()">PRESS ME TO REVEAL YOUR FUTURE</button>
+</div>
+<div id="info">
+
+</div>
+
+<script>
+
+    // var testQuery = ""
+
+    // Define a callback function to receive the SPARQL JSON result.
+    function myCallback(str) {
+        // Convert result to JSON
+        var jsonObj = eval('(' + str + ')');
+
+        //var testingObject = sparqlJSONToObject(jsonObj, "dataProperty");
+
+        var finalArray = []
+
+        for (var j = 0; j < jsonObj.results.bindings.length; j++) {
+            var obj = jsonObj.results.bindings[j];
+            var arrayOfprops = [];
+            for (var i = 0; i < jsonObj.head.vars.length; i++) {
+                var nameOfProperty = jsonObj.head.vars[i];
+                if (!(nameOfProperty in obj)) arrayOfprops.push("");
+                else arrayOfprops.push(obj[nameOfProperty]);
+            }
+            finalArray.push(arrayOfprops);
+        }
+
+        d3.selectAll("div#resultinfo").text("").append("h2").html("Elements in array:" + finalArray.length);
+        var a = d3.select("#results").text("").append("table").attr('border', 2).attr('cellpadding', 9); //
+        a.append("tr").selectAll("td").data(jsonObj.head.vars).enter() //
+                .append("td").text(function (d, i) {
+                    return d;
+                }) //
+        var b = a.selectAll("tr#dt").data(finalArray).enter() //
+        var c = b.append("tr").attr('id', 'dt').selectAll("td").data(function (d, i) {
+                    return objToArrayValues(d);
+                }).enter() //
+                        .append("td").text(function (d, i) {
+                            return d.value;
+                        }) //
+                ;
+    }
+
+
+    // Make the query.
+
+    function processRequest() {
+        var endpoint = d3.select("#endP").node().value;
+        var defaultGraph = d3.select("#defaultgraph").node().value;
+        if(defaultGraph=='') defaultGraph= null;
+        delLogEntry("error");
+        d3.select("#results").text("");
+        formD3ChainCalls(d3.select('body'), "div#info|p").html('endpoint:' + endpoint + " <br> query: " + d3.select("#inputTA").node().value);
+
+        sparqlQueryJsonThroughService(d3.select("#inputTA").node().value, endpoint, defaultGraph,"http://localhost/aov/mirror/", myCallback, function (d) {
+            addLogEntryHtml("error", d);
+        });
+
+        /*sparqlQueryJson(d3.select("#inputTA").node().value, endpoint, myCallback, function(d){
+         addLogEntryHtml("error", d);
+         });*/
+
+        //queryService(d3.select("#inputTA").node().value,"http://localhost/oed/rootviewer/",function(d){},function(d){});
+    }
+</script>
+
+<div id="resultinfo"></div>
+<div id="results">
+</div>
+
+</body>
+</html>
+
