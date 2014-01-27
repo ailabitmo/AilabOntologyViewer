@@ -24,6 +24,7 @@ public class MirrorProcessor implements IProcessor<MirrorRequestAndContextModel,
 
         String result="";
 
+
         logger.debug(requestString.toString());
         if ("post".equalsIgnoreCase(input.getTypeOfRequest()))
             result = NetworkingUtils.sendContentToUrl(input.getEndpoint(), input.getSparqlRequest(), "utf-8", 10000, 3, null);
