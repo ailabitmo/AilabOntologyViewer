@@ -2,10 +2,11 @@ package ru.ifmo.ailab.ontology.viewer.base.imp.rootviewer.modelBuilder;
 
 import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.sparql.engine.http.QueryEngineHTTP;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.ifmo.ailab.ontology.viewer.base.imp.rootviewer.ViewerRequestAndContextModel;
 import ru.ifmo.ailab.ontology.viewer.base.imp.rootviewer.ontoModel.ClassInfo;
 import ru.ifmo.ailab.ontology.viewer.base.imp.rootviewer.ontoModel.utils.UtilStructures;
-import ru.ifmo.ailab.ontology.viewer.base.utils.Logger;
 import ru.ifmo.ailab.ontology.viewer.base.utils.MyQuerySolution;
 
 
@@ -24,7 +25,7 @@ public class ClassInfoBuilder extends AModelBuilder<ClassInfo> {
     }
 
     protected ClassInfo createOntoItem(String id) {
-        String query = "select distinct (<" + id + "> as ?id) ?label ?parentClass " +
+        String query = DEFAULT_PREFIX + "select distinct (<" + id + "> as ?id) ?label ?parentClass " +
                 "where { " +
                 "   OPTIONAL {" +
                 "       <" + id + "> rdfs:label ?label." +
@@ -49,7 +50,7 @@ public class ClassInfoBuilder extends AModelBuilder<ClassInfo> {
                 return toRet;
             }
         } catch (Exception e) {
-            Logger.exception(e);
+            logger.error("Exception", e);
         }
         return null;
     }
@@ -58,4 +59,6 @@ public class ClassInfoBuilder extends AModelBuilder<ClassInfo> {
     protected void addToUtilStructures(UtilStructures us, ClassInfo item) {
         us.addClassInfo(item);
     }
+
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
 }

@@ -1,10 +1,11 @@
 package ru.ifmo.ailab.ontology.viewer.base.imp.rootviewer;
 
 import com.hp.hpl.jena.sparql.engine.http.QueryEngineHTTP;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.spb.kpit.kivan.General.Strings.StringUtils;
 import ru.ifmo.ailab.ontology.viewer.base.imp.rootviewer.ontoModel.utils.UtilStructures;
 import ru.ifmo.ailab.ontology.viewer.base.interfaces.ARequestAndContextWithEndpoint;
-import ru.ifmo.ailab.ontology.viewer.base.utils.Logger;
 
 import java.util.List;
 
@@ -37,7 +38,7 @@ public class ViewerRequestAndContextModel extends ARequestAndContextWithEndpoint
     }
 
     public QueryEngineHTTP getQueryEngine(String query) {
-        Logger.debug("Requesting QE for: " + query);
+        logger.debug("Requesting QE for: " + query);
         QueryEngineHTTP queryEngineHTTP = new QueryEngineHTTP(getEndpoint(), query);
         if (getLogin() != null)
             queryEngineHTTP.setBasicAuthentication(getLogin(), getPassword() != null ? getPassword().toCharArray() : "".toCharArray());
@@ -63,4 +64,5 @@ public class ViewerRequestAndContextModel extends ARequestAndContextWithEndpoint
     public String getPreferedLanguage() {
         return preferedLanguage;
     }
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
 }

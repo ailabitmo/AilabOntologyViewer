@@ -1,5 +1,7 @@
 package ru.ifmo.ailab.ontology.viewer;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.ifmo.ailab.ontology.viewer.base.imp.help.HelpProcessor;
 import ru.ifmo.ailab.ontology.viewer.base.imp.help.HelpResponseModel;
 import ru.ifmo.ailab.ontology.viewer.base.imp.mirror.MirrorProcessor;
@@ -12,7 +14,6 @@ import ru.ifmo.ailab.ontology.viewer.base.interfaces.EmptyRequestAndContextModel
 import ru.ifmo.ailab.ontology.viewer.base.interfaces.IProcessor;
 import ru.ifmo.ailab.ontology.viewer.base.interfaces.IRequestAndContextModel;
 import ru.ifmo.ailab.ontology.viewer.base.interfaces.IResponseModel;
-import ru.ifmo.ailab.ontology.viewer.base.utils.Logger;
 import ru.spb.kpit.kivan.General.Strings.StringUtils;
 import ru.spb.kpit.kivan.Randomizer.Triad;
 
@@ -95,7 +96,7 @@ public class EditorServlet extends HttpServlet {
                             }
                             parameters = sb.toString();
                         } catch (IOException e) {
-                            Logger.exception(e);
+                            logger.error("IOException", e);
                         }
                     }
                 }
@@ -103,7 +104,7 @@ public class EditorServlet extends HttpServlet {
                 requestType = "help";
             }
 
-            Logger.info("Starting: " + requestType + " " + path + " " + parameters);
+            logger.info("Starting: " + requestType + " " + path + " " + parameters);
             //profiler.start("EditorServlet main");
 
             Triad<Class, Class, Class> selected = processorMap.get(requestType);
@@ -118,7 +119,7 @@ public class EditorServlet extends HttpServlet {
                 Constructor<IRequestAndContextModel> constr = requestModel.getConstructor();
                 requMod = constr.newInstance();
             } catch (Exception e) {
-                Logger.exception(e);
+                logger.error("No constructor in requestModel", e);
                 wr.append("!!!ОШИБКА ОТСУТСТВУЕТ КОНСТРУКТОР ПО УМОЛЧАНИЮ В REQUESTMODEL для '" + requestType + "'!!!");
             }
             requMod = requMod.init(parameters);
@@ -126,7 +127,7 @@ public class EditorServlet extends HttpServlet {
                 Constructor<IProcessor> constr = processor.getConstructor();
                 processoR = constr.newInstance();
             } catch (Exception e) {
-                Logger.exception(e);
+                logger.error("No constructor in processor", e);
                 wr.append("!!!ОШИБКА ОТСУТСТВУЕТ КОНСТРУКТОР ПО УМОЛЧАНИЮ В PROCESSOR для '" + requestType + "'!!!");
             }
             respMod = processoR.processRequest(requMod);
@@ -134,7 +135,7 @@ public class EditorServlet extends HttpServlet {
             //Logger.debug("Response:"+response);
             wr.append(response);
         } catch (Exception e) {
-            Logger.exception(e);
+            logger.error("Exception in process", e);
         } finally {
             /*profiler.end("EditorServlet main");
             Logger.debug(profiler.getInfo());*/
@@ -145,4 +146,7 @@ public class EditorServlet extends HttpServlet {
             }
         }
     }
+
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
+
 }
