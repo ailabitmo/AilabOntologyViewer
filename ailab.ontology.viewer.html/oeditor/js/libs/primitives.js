@@ -343,6 +343,54 @@ function SmartText(width, text, textClass) {
     listOfStrings.push(currentString);
     return listOfStrings;
 }
+function splitIntoLines(width, text, textClass) {
+    function maxWidth(lineIndex) {
+        return typeof width == "function" ? width(lineIndex) : width;
+    }
+    var resultLines = [];
+    var i = 0;
+    var line = "";
+    while (i < text.length) {
+        var j = text.indexOf(" ", i);
+        if (j < 0) {
+            j = text.length;
+        }
+        var longerLine = line + (line.length > 0 ? " " : "") + text.substring(i, j);
+        var ti = textInfo(longerLine, textClass);
+        if (ti.width < maxWidth(resultLines.length)) {
+            line = longerLine;
+            i = j + 1;
+        } else {
+            if (line.length > 0) {
+                resultLines.push(line);
+                line = "";
+            } else {
+                // binary search to find wrap index
+                var l = i,
+                    r = text.length;
+                while (r - l > 1) {
+                    j = Math.floor((l + r) / 2);
+                    longerLine = line + text.substring(i, j);
+                    ti = textInfo(longerLine, textClass);
+                    if (ti.width > maxWidth(resultLines.length)) {
+                        r = j;
+                    } else {
+                        l = j;
+                    }
+                }
+                if (longerLine.length > 0) {
+                    resultLines.push(longerLine);
+                    line = "";
+                    i = j;
+                }
+            }
+        }
+    }
+    if (line.length > 0) {
+        resultLines.push(line);
+    }
+    return resultLines;
+}
 /**
  * @param target родительский элемент,контейнер для элементов (g)
  * @param id идентификатор группы этой линии
@@ -753,7 +801,7 @@ function textInfo(stringOfText, textElementClass) {
     var baseline = 1 - span1.node().offsetTop / xx2.node().clientHeight; // span2.node().offsetHeight
 
     var res = {'width': xx.node().clientWidth + 1, 'height': xx.node().clientHeight + 1, 'baseLineHeight': Math.round(baseline * (xx.node().clientHeight + 1))};
-
+    res.offsetY = res.height - res.baseLineHeight;
     putToMap(res);
 
     span1.text("");

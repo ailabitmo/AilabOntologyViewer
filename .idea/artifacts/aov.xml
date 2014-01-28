@@ -2,13 +2,7 @@
   <artifact type="war" name="aov">
     <output-path>$PROJECT_DIR$/out/artifacts/aov</output-path>
     <root id="archive" name="aov.war">
-      <element id="artifact" artifact-name="ailab.ontology.viewer.web:exploded" />
-      <element id="dir-copy" path="$PROJECT_DIR$/ailab.ontology.viewer.html" />
-      <element id="directory" name="WEB-INF">
-        <element id="directory" name="lib">
-          <element id="library" level="project" name="org.slf4j:slf4j-api:1.7.4" />
-        </element>
-      </element>
+      <element id="artifact" artifact-name="aovexp" />
     </root>
   </artifact>
 </component>

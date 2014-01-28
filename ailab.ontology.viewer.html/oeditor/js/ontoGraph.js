@@ -22,6 +22,7 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
     var heightBetweenNodesOfDifferentParent = params.heightBetweenNodesOfDifferentParent;
     var animationDuration = params.animdur;
     var tooltiper = params.tooltiper;
+    var ui = kiv.UI(tooltiper);
     var textInLine = params.textInLine;
     var histowidth = nodeWidth - nodeDif + 20;
 
@@ -34,8 +35,8 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
             each(d.classes, function (obj) {
                 if (obj.name != 'owl#NamedIndividual') name += obj.name+",";
             });
-            a = kiv.UI().NiceRoundRectangle({uText: name,
-                lContainer: kiv.UI().SimpleText({
+            a = ui.NiceRoundRectangle({uText: name,
+                lContainer: ui.SimpleText({
                     text: d.name,
                     textClass: "basicTextInGraph",
                     vertMargin: 5
@@ -55,7 +56,7 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
                 });
             }
 
-            var text = kiv.UI().StructuredText(
+            var text = ui.StructuredText(
                 {nameTextClass: "paragraphHeaderGraph", valTextClass: "basicTextInGraph",
                     struct_text: [
                         {name: "Свойства:", val: dataProps}
@@ -64,13 +65,13 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
                 }
             );
 
-            var textSimple = kiv.UI().SimpleText({
+            var textSimple = ui.SimpleText({
                 text: d.name,
                 textClass: "basicTextInGraph",
                 vertMargin: 3
             });
 
-            var container = kiv.UI().LayoutContainer1(
+            var container = ui.LayoutContainer1(
                 {upperText: textSimple, lowerText: text, lineFill: d.headcolor, lineSize: 2, vertMargin: 6}
             );
 
@@ -78,7 +79,7 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
             each(d.classes, function (obj) {
                 if (obj.name != 'owl#NamedIndividual') name += obj.name+",";
             });
-            a = kiv.UI().NiceRoundRectangle({
+            a = ui.NiceRoundRectangle({
                 uText: name,
                 //lContainer: textSimple,
                 lContainer: container,
@@ -131,8 +132,7 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
         .attr("width", w).attr("height", h)
         .attr("pointer-events", "all");
 
-    var indi = new Indicator(d3.select("#svg_id"));
-
+    var indi = null;
     var zoomPart = formD3ChainCalls(svg, "g#zoom_part|id'zoom_part");
     /*var historypart = formD3ChainCalls(svg, "g#hist_part|id'hist_part");
      addRect(historypart, 30, 50, histowidth, h - 100, 5, 5)
@@ -158,12 +158,13 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
             sparqlEndpoint: "", service: ""
         };
         ip = (arguments.length == 1) ? mergeProperties(ip, defaultParams) : defaultParams;
-        indi.show();
+        indi = Indicator.create(d3.select("#svg_id"));
         queryService(ip.sparqlEndpoint + "$" + ip.idOfInstance, ip.service, function (d) {
             try {
                 var allData = eval('(' + d + ')');
+                indi.stop();
             } catch (e) {
-                indi.ERROR();
+                indi.error();
                 return;
             }
 
@@ -245,7 +246,7 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
                 }
             );
         },function(d){
-            indi.ERROR();
+            indi.error();
             return;
         });
 
@@ -409,7 +410,7 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
                     //In or out
                     var inOrOut = (d.IN)?"IN":"OUT";
 
-                    var text = kiv.UI().SimpleText({
+                    var text = ui.SimpleText({
                         text: d.name,
                         textClass: "paragraphHeaderGraph",
                         vertMargin: 5,
@@ -431,8 +432,8 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
                         if (obj.name != 'owl#NamedIndividual') name+= obj.name+", ";
                     });
                     name = name.substr(0, name.length-2);
-                    a = kiv.UI().NiceRoundRectangle({uText: name,
-                        lContainer: kiv.UI().SimpleText({
+                    a = ui.NiceRoundRectangle({uText: name,
+                        lContainer: ui.SimpleText({
                             text: d.name,
                             textClass: "basicTextInGraph",
                             vertMargin: 5
@@ -453,7 +454,7 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
                         });
                     }
 
-                    var text = kiv.UI().StructuredText(
+                    var text = ui.StructuredText(
                         {nameTextClass: "paragraphHeaderGraph", valTextClass: "basicTextInGraph",
                             struct_text: [
                                 {name: "Свойства:", val: dataProps}
@@ -462,13 +463,13 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
                         }
                     );
 
-                    var textSimple = kiv.UI().SimpleText({
+                    var textSimple = ui.SimpleText({
                         text: d.name,
                         textClass: "basicTextInGraph",
                         vertMargin: 3
                     });
 
-                    var container = kiv.UI().LayoutContainer1(
+                    var container = ui.LayoutContainer1(
                         {upperText: textSimple, lowerText: text, lineFill: d.headcolor, lineSize: 2, vertMargin: 6}
                     );
 
@@ -478,7 +479,7 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
 
                     });
                     name = name.substr(0, name.length-2);
-                    a = kiv.UI().NiceRoundRectangle({
+                    a = ui.NiceRoundRectangle({
                         uText: name,
                         //lContainer: textSimple,
                         lContainer: container,
@@ -588,8 +589,6 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
                 else return "translate(0,0)"
             })
             .remove();
-
-        indi.hide();
     }
 
     function setParent(node) {
