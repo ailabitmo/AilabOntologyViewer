@@ -11,6 +11,8 @@ import java.util.Date;
  * : Kivan
  * : 07.01.14
  * : 17:00
+ *
+ * %%% Основной кэш, в котором хранится информация
  */
 public class MainOntoCache {
     static AutoPurgingCache apc = new AutoPurgingCache(new TimeProvider() {

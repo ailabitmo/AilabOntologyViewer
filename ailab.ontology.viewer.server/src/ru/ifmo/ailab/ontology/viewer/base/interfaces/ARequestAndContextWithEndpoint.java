@@ -5,6 +5,8 @@ package ru.ifmo.ailab.ontology.viewer.base.interfaces;
  * : Kivan
  * : 06.01.14
  * : 13:13
+ *
+ * %%% Общая модель запроса
  */
 public abstract class ARequestAndContextWithEndpoint<REQ extends IRequestAndContextModel> implements IRequestAndContextModel<REQ> {
 

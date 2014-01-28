@@ -5,6 +5,8 @@ package ru.ifmo.ailab.ontology.viewer.base.imp.rootviewer.ontoModel;
  * : Kivan
  * : 07.01.14
  * : 19:54
+ *
+ * %%% Модель: информация о значении свойства данного
  */
 public class DataPropertyValue {
     DataPropertyInfo dpInfo;

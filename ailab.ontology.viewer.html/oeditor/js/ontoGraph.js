@@ -1,12 +1,13 @@
 //-----------------------------------------------------------------------------------------
 //-----------------------------------------ONTOLOGY VIEWER
 //-----------------------------------------------------------------------------------------
+var tooltip = kiv.tooltip("tooltip");
 kiv.graphStuff.ontologyViewerTreeNew = function (params) {
     var defaultParams = {
         width: 1200, height: 600, nodewidth: 330, nodeDif: 100, heightPerTextLine: 1,
         heightBetweenNodesOfOneParent: 10, heightBetweenNodesOfDifferentParent: 40,
         animdur: 500, containerid: 'chart', buttonWidth: 0,buttonWidth2: 15, textInLine: 35,
-        tooltiper: kiv.tooltip("tooltip")
+        tooltiper:tooltip
     };
     params = (arguments.length == 1) ? mergeProperties(params, defaultParams) : defaultParams;
 
@@ -196,7 +197,7 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
                         if (!(typeof objProperties[dd] === "string") && containsInObj(objProperties[dd], d.id) && (dd in objectProperties)) {
                             var children = [];
                             if (!(dd in objPropNodes)) {
-                                objPropNodes[dd] = {name: getLabel(objectProperties[dd].id, objectProperties), children: children, IN:jj.IN, isRoot: true, headcolor: getSomeObjectColor(d.id, arrayOfClassKeys)};
+                                objPropNodes[dd] = {name: getLabel(objectProperties[dd].id, objectProperties), children: children, IN:jj.IN, isRoot: true, headcolor: (d.parent)?d.parent.headcolor: d.headcolor};
                                 if (!containsInObj(usedElements, dd))  usedElements[dd] = 1;
                                 else objPropNodes[dd].cloned = '_' + (KID++);
                             }
@@ -255,9 +256,10 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
                 var obj = objects[indexx];
                 var node = ((obj['id'] == idroot)) ? {id: indexx, /*x: 0, y: 0,*/ main: true} : {id: indexx, main: false/*, x: 0, y: 0*/};
                 node.headcolor = function () {
-                    for (var index in obj.class)
-                        if (arrayOfClassKeys.indexOf(obj.class[index]) != -1) return getSomeObjectColor(obj.class[index], arrayOfClassKeys);
-                    return "darkgray";
+                    var classes = [];
+                    each(obj.class,function(d){classes.push(d);});
+                    classes.sort();
+                    return getSomeObjectColor(classes, arrayOfClassKeys);
                 }();
                 node['label'] = getLabel(obj.id, objects);
                 node['name'] = getLabel(obj.id, objects);
@@ -325,10 +327,8 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
             .enter().append("path")
             .attr("class", "link")
             .attr('stroke', function (d) {
-                if (d.source.headcolor == "black") {
-                    return d.source.parent.headcolor;
-                }
-                else return d.source.headcolor;
+                if(d.source.label) return d.source.headcolor;
+                else return d.source.parent.headcolor;
             });
 
         var linkUpdate = link;
@@ -511,6 +511,7 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
                     });
 
                     var lpth = left.append("path").attr("d", "M0,-5L-10,0L0,5").attr("fill", d.headcolor).attr("transform","translate("+(-(nodeWidth - nodeDif) / 2-(buttonWidth2-10)/2)+",0)");
+                    lpth.on("mousedown.left", leftActionGenerator());
                     lpth.on('mouseover.left', function (d, i) {
                         left.transition().duration(animationDuration).attr("opacity",1);
                     });

@@ -5,6 +5,8 @@ package ru.ifmo.ailab.ontology.viewer.base.interfaces;
  * : Kivan
  * : 06.01.14
  * : 19:10
+ *
+ * %%% Пустая модель ответа
  */
 public class EmptyResponseModel implements IResponseModel<EmptyResponseModel> {
     @Override

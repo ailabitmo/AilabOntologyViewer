@@ -9,6 +9,8 @@ import ru.ifmo.ailab.ontology.viewer.base.interfaces.IResponseModel;
  * : Kivan
  * : 07.01.14
  * : 14:57
+ *
+ * %%% Модель ответа для просмотровщика
  */
 public class ViewerResponseModel implements IResponseModel<ViewerResponseModel> {
 

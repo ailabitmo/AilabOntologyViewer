@@ -14,6 +14,8 @@ import java.util.Map;
  * : Kivan
  * : 06.01.14
  * : 19:09
+ *
+ * %%% Вспомогательный обработчик, выводит информацию о возможных запросах к сервлету
  */
 public class HelpProcessor implements IProcessor<EmptyRequestAndContextModel, HelpResponseModel> {
     Map<String, Triad<Class, Class, Class>> map = EditorServlet.getTypeMap();

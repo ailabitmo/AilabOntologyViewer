@@ -16,6 +16,8 @@ import java.util.HashSet;
  * : Kivan
  * : 07.01.14
  * : 18:18
+ *
+ * %%% Построитель модели экземпляра по запросу к хранилищу.
  */
 public class OntoObjectBuilder extends AModelBuilder<OntoObject> {
     protected OntoObjectBuilder(ViewerRequestAndContextModel inputParams) {
@@ -34,16 +36,16 @@ public class OntoObjectBuilder extends AModelBuilder<OntoObject> {
 
         try {
             //1. Берем входящие обжект проперти
-            String query = DEFAULT_PREFIX + "select distinct ?objPropertyVal ?objProperty where { ?objPropertyVal ?objProperty <" + id + ">. ?objProperty a owl:ObjectProperty} LIMIT 200";
+            String query = "select distinct ?objPropertyVal ?objProperty where { ?objPropertyVal ?objProperty <" + id + ">. ?objProperty a owl:ObjectProperty} LIMIT 30";
             toRet.setInObjectProperties(processObjProperies(query));
 
             //2. Берем исходящие обжект проперти
-            query = DEFAULT_PREFIX + "select distinct ?objPropertyVal ?objProperty where {<" + id + ">  ?objProperty ?objPropertyVal . ?objProperty a owl:ObjectProperty} LIMIT 200";
+            query = "select distinct ?objPropertyVal ?objProperty where {<" + id + ">  ?objProperty ?objPropertyVal . ?objProperty a owl:ObjectProperty} LIMIT 30";
             toRet.setOutObjectProperties(processObjProperies(query));
 
             return toRet;
         } catch (Exception e) {
-            logger.error("Exception", e);
+            logger.error(e.toString());
         }
         return null;
     }
@@ -69,5 +71,6 @@ public class OntoObjectBuilder extends AModelBuilder<OntoObject> {
         engine.close();
         return toRet;
     }
+
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 }

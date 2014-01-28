@@ -9,6 +9,8 @@ import ru.ifmo.ailab.ontology.viewer.base.interfaces.IProcessor;
  * : Kivan
  * : 07.01.14
  * : 14:59
+ *
+ * %%% Обработчик запроса для просмотровщика
  */
 public class ViewerProcessor implements IProcessor<ViewerRequestAndContextModel, ViewerResponseModel> {
     public ViewerResponseModel processRequest(ViewerRequestAndContextModel input) {

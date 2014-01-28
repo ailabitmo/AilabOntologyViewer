@@ -7,6 +7,8 @@ import ru.ifmo.ailab.ontology.viewer.base.interfaces.IResponseModel;
  * : Kivan
  * : 06.01.14
  * : 13:21
+ *
+ * %%% Модель выхода для зеркального обработчика
  */
 public class MirrorResponseModel implements IResponseModel<MirrorResponseModel> {
 

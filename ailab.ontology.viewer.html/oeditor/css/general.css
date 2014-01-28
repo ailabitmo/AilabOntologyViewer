@@ -2,7 +2,7 @@
 .tooltip {
     position: absolute;
     text-align: center;
-    max-width: 300px;
+    min-width: 300px;
     /*min-height: 30px;*/
     color: black;
     /*width: 60px;*/

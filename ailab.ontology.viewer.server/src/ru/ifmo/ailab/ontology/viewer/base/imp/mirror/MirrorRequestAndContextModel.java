@@ -10,9 +10,15 @@ import java.util.List;
  * : Kivan
  * : 06.01.14
  * : 13:05
+ *
+ * %%% Модель запроса для зеркального обработчика.
  */
 public class MirrorRequestAndContextModel extends ARequestAndContextWithEndpoint<MirrorRequestAndContextModel> {
 
+    /**
+     * post/get
+     */
+    String typeOfRequest;
     String sparqlRequest;
 
     public String getSparqlRequest() {
@@ -23,19 +29,28 @@ public class MirrorRequestAndContextModel extends ARequestAndContextWithEndpoint
         this.sparqlRequest = sparqlRequest;
     }
 
+    public String getTypeOfRequest() {
+        return typeOfRequest;
+    }
+
+    public void setTypeOfRequest(String typeOfRequest) {
+        this.typeOfRequest = typeOfRequest;
+    }
+
     @Override
     public MirrorRequestAndContextModel init(String stringParams) {
         List<String> params = StringUtils.split(stringParams, "$");
         setEndpoint(params.get(0));
         setSparqlRequest(params.get(1));
-        if(params.size()>2) setLogin(params.get(2));
-        if(params.size()>3) setPassword(params.get(3));
+        setTypeOfRequest(params.get(2));
+        if(params.size()>3) setLogin(params.get(3));
+        if(params.size()>4) setPassword(params.get(4));
 
         return this;
     }
 
     @Override
     public String getRequestStringDescription() {
-        return "format: endpoint$sparqlrequest[$login$password] login|password - необязательные";
+        return "format: endpoint$sparqlrequest$type[$login$password] type - get/post login|password - необязательные";
     }
 }

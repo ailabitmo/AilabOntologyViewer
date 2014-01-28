@@ -378,7 +378,7 @@ kiv.tooltip = function (style) {
     /**
      * Привязывет тултип к элементу
      * @param element элемент. Работает так: если наводят мышь - тултип появляется, если отводят - пропадает
-     * @param textFormer - функция, позволяющая сформировать штпль, для его рендеринга в тултипе
+     * @param textFormer - функция, позволяющая сформировать текст, для его рендеринга в тултипе
      * @param params - параметры, на данный момент доступны следующие параметры:
      *      x - сдвиг по х от событиия
      *      y - сдвиг по y от события
@@ -412,7 +412,6 @@ kiv.tooltip = function (style) {
                     .style("opacity", "0");
             });
     };
-
 
     return tooltip;
 };
@@ -449,11 +448,12 @@ kiv.krand = function () {
 // 5. Use id with uiCounter variable
 // 6. Could be set action to all elements .setAction = function (targetAction, functor)
 var uiCounter = 0;
+var uiTooltip = kiv.tooltip("tooltip");
 kiv.UI = function (tooltiper) {
     function UI() {
     }
 
-    if (arguments.length == 0) tooltiper = kiv.tooltip("tooltip");
+    if (arguments.length == 0) tooltiper = uiTooltip;
 
     UI.NiceRoundRectangle = function (params) {
         var defaultParams = {

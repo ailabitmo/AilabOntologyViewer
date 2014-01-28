@@ -147,7 +147,6 @@ function addBorderRect(target, picWidth, picHeight, borderWidth, fill, rx, ry) {
         .attr("stroke-width", borderWidth);
 }
 
-
 /**
  *
  * @param x
@@ -332,7 +331,7 @@ function SmartText(width, text, textClass) {
     for (var index in txt) {
         var ti = textInfo(txt[index], textClass);
         var newLine = txt[index].lastIndexOf("\\#", 0) >= 0;
-        if (currentWidth + ti.width + spaceWidth > width || newLine) {
+        if (currentWidth + ti.width + spaceWidth > width && currentString!="" || newLine) {
             listOfStrings.push(currentString);
             currentString = (!newLine) ? txt[index] + " " : "";
             currentWidth = (!newLine) ? ti.width + spaceWidth : 0;
@@ -809,7 +808,6 @@ function textInfo(stringOfText, textElementClass) {
     span2.text("");
     xx.text("");
 
-
     return res;
 
     function checkMap(){
@@ -826,7 +824,7 @@ function sign(x) {
     return x ? x < 0 ? -1 : 1 : 0;
 }
 /**
- * Отправить запрос в спаркл эндпоинт.
+ * Отправить запрос в спаркл эндпоинт из JS.
  * @param queryStr - запрос
  * @param endpoint - спаркл эндпоинт
  * @param callback функция, которая вызывается по результату
@@ -872,12 +870,15 @@ function sparqlQueryJson(queryStr, endpoint, callback, errorHandler) {
  * @param serviceUrl - сервис, через который идет запрос
  * @param callback функция, которая вызывается по результату
  * @param errorHandler - подхватыватель ошибки
+ * @param defaultGraph - дефолтный граф
  */
-function sparqlQueryJsonThroughService(queryStr, endpoint , serviceUrl, callback, errorHandler) {
+function sparqlQueryJsonThroughService(queryStr, endpoint, defaultGraph, serviceUrl, callback, errorHandler) {
     errorHandler = (arguments.length == 4) ? errorHandler : function (d) {
     };
-    var format = "SPARQL/JSON";
-    var querypart = endpoint+"$query=" + encodeURI(queryStr + "&format=" + format).replace(/&&/g, '+%26%26+');
+    var format = "JSON";
+    var querypart = endpoint+ ((defaultGraph)?"$?default-graph-uri=" + encodeURIComponent("http://dbpedia.org")+"&":"$?")+"query="+encodeURIComponent(queryStr) + "&format=" + encodeURIComponent(format);
+    querypart = querypart.replace(/&&/g, '+%26%26+');
+    querypart+="$get";
     //http://localhost/oed/mirror/?http://localhost:8888/sparql$?query=select%20*%20where%20%7B?a%20?b%20rdfs:label%0A%7D&format=SPARQL/JSON;
 
 

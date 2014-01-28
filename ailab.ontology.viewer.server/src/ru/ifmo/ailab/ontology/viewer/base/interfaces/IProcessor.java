@@ -5,6 +5,8 @@ package ru.ifmo.ailab.ontology.viewer.base.interfaces;
  * : Kivan
  * : 06.01.14
  * : 13:02
+ *
+ * %%% Интерфейс обработчика
  */
 public interface IProcessor<REQ extends IRequestAndContextModel,RESP extends IResponseModel> {
     /**

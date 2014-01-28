@@ -8,6 +8,8 @@ import com.hp.hpl.jena.rdf.model.RDFNode;
  * : Kivan
  * : 07.01.14
  * : 22:49
+ *
+ * %%% Обертка к спаркловскому запросу
  */
 public class MyQuerySolution {
     QuerySolution qs;

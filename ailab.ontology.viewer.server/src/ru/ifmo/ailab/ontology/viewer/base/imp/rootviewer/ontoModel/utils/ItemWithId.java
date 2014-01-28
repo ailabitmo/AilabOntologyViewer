@@ -6,6 +6,8 @@ package ru.ifmo.ailab.ontology.viewer.base.imp.rootviewer.ontoModel.utils;
  * Date: 15.03.13
  * Time: 4:05
  * To change this template use File | Settings | File Templates.
+ *
+ * %%% Нечто с абстрактным идентификатором
  */
 public abstract class ItemWithId {
     /**

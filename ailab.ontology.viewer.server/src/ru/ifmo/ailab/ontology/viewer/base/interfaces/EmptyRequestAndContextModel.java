@@ -5,6 +5,8 @@ package ru.ifmo.ailab.ontology.viewer.base.interfaces;
  * : Kivan
  * : 06.01.14
  * : 19:09
+ *
+ * %%% Пустая модель запроса
  */
 public class EmptyRequestAndContextModel implements IRequestAndContextModel<EmptyRequestAndContextModel> {
     @Override

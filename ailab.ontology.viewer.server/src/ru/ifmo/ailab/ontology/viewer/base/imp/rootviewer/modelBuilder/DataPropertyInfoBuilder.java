@@ -14,6 +14,8 @@ import ru.ifmo.ailab.ontology.viewer.base.utils.MyQuerySolution;
  * : Kivan
  * : 07.01.14
  * : 20:07
+ *
+ * %%% Построитель модели информации о свойстве данных по запросу к хранилищу.
  */
 public class DataPropertyInfoBuilder extends AModelBuilder<DataPropertyInfo> {
     public DataPropertyInfoBuilder(ViewerRequestAndContextModel inputParams) {
