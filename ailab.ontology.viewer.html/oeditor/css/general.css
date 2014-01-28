@@ -60,3 +60,15 @@
     stroke-width: 1.5px;
 }
 
+.hyperlink {
+    fill: #0000bb;
+}
+.hyperlink:hover {
+    text-decoration: underline;
+}
+.hyperlink:active {
+    fill: orange;
+}
+.hyperlink:visited {
+    fill: #000088;
+}

@@ -76,7 +76,6 @@ kiv.graphStuff.graph = function (outer, linesFirst) {
     }
 
     graph.rebuildSVG = function () {
-
         rebuildSVGStart();
         if (!linksOnSVG) {
             if (linesFirst) {
@@ -503,7 +502,10 @@ kiv.UI = function (tooltiper) {
             var dataHeight = (tiUp.height) + 2 * p.marginY + lowerHeight + 2 * p.borderSize;
 
             els.bigColoredRect_a = {type: "rect", attr: {height: dataHeight, width: width, y: y, x: x, fill: p.color, rx: roundXY, ry: roundXY}};
-            els.bigWhiteRect_b = {type: "rect", attr: {height: dataHeight - roundXY - p.borderSize, width: width - 2 * p.borderSize, y: y + roundXY, x: x + p.borderSize, fill: "white", rx: roundXY - p.borderSize, ry: roundXY - p.borderSize}};
+            els.bigWhiteRect_b = {type: "rect", attr: {
+                height: dataHeight - roundXY - p.borderSize, width: width - 2 * p.borderSize, y: y + roundXY, x: x + p.borderSize,
+                fill: "white", rx: Math.max(roundXY - p.borderSize, 0), ry: Math.max(roundXY - p.borderSize, 0)
+            }};
             els.smallWhite_c = {type: "rect", attr: {height: roundXY, width: width - 2 * p.borderSize, y: y + roundXY, x: x + p.borderSize, fill: "white"}};
             els.upperText_d = {type: "text", attr: {props: tiUp, width: width - 2 * p.marginXTop, y: y + tiUp.height - tiUp.baseLineHeight - 1, x: x + p.borderSize + p.marginXTop, class: p.classUpperText, text: p.uText}};
             els.container_e = {type: "g", attr: {container: p.lContainer, x: x + p.borderSize + p.marginX, y: y + roundXY + p.marginY, width: width - 2 * p.marginX - 2 * p.borderSize}};
@@ -537,30 +539,50 @@ kiv.UI = function (tooltiper) {
         var defaultParams = {text: "123", textClass: "upper_element_text", vertMargin: 3, raze: false};
         var p = (arguments.length == 1) ? mergeProperties(params, defaultParams) : defaultParams;
 
-        var listOFStrings = null;
         var ti = textInfo(p.text, p.textClass);
-
         var g = null;
-
-        var els = {textElement_a: null};
         var renderedElements = [];
 
         function SimpleText() {
         }
 
         SimpleText.height = function (width) {
-            listOFStrings = SmartText(width, p.text, p.textClass);
-            return (listOFStrings.length * (ti.height - ti.baseLineHeight + p.vertMargin)) - p.vertMargin;
+            if (p.raze) {
+                return ti.height;
+            } else {
+                var textLines = splitIntoLines(width, p.text, p.textClass);
+                return (textLines.length * (ti.height - ti.baseLineHeight + p.vertMargin)) - p.vertMargin;
+            }
         };
 
         SimpleText.render = function (parent, x, y, width) {
-            listOFStrings = SmartText(width, p.text, p.textClass);
-            uiCounter++;
-            if (g != null) g.text("");
-            g = formD3ChainCalls(parent, "g#id" + uiCounter + "|id'" + uiCounter);
-            if (p.raze) els.textElement_a = {type: "text", attr: {props: ti, width: width, y: y + ti.height - ti.baseLineHeight, x: x, class: p.textClass, text: p.text}};
-            else els.textElement_a = {type: "text", attr: {strList: listOFStrings, props: ti, width: width, y: y + ti.height - ti.baseLineHeight, x: x, class: p.textClass, text: p.text}};
-            renderAllElements();
+            var textParent = mav.wrapHyperlink(p.raze ? parent : parent.append("g"), p.text);
+            var icon = mav.iconForUrl(textParent, p.text, ti.height * 0.8);
+            var iconSize = icon != null ? ti.height : 0;
+            if (icon != null) {
+                icon.attr("x", x + ti.height * 0.1).attr("y", y + ti.height * 0.1);
+            }
+            if (p.raze) {
+                var textElement = textParent.append("text")
+                    .attr("width", width)
+                    .attr("y", y + ti.offsetY)
+                    .attr("x", x + iconSize)
+                    .attr("class", p.textClass);
+                razeText(textElement, p.text, "", width - iconSize, ti, null, tooltiper);
+                renderedElements.push(textElement);
+            } else {
+                var textLines = splitIntoLines(function (i) {return width - (i == 0 ? iconSize : 0);}, p.text, p.textClass);
+                for (var i = 0; i < textLines.length; i++) {
+                    var lineText = textLines[i];
+                    var lineElement = textParent.append("text")
+                        .attr("width", width)
+                        .attr("y", y + ti.offsetY + (ti.offsetY + p.vertMargin) * i)
+                        .attr("x", x + (i == 0 ? iconSize : 0))
+                        .attr("class", p.textClass)
+                        .text(lineText);
+                    renderedElements.push(lineElement);
+                }
+            }
         };
 
         SimpleText.setAction = function (targetAction, functor) {
@@ -569,46 +591,20 @@ kiv.UI = function (tooltiper) {
             });
         };
 
-        function renderAllElements() {
-            each(objToArrayKeys(els), function (element) {
-                if (els[element] != null) {
-                    els[element].attr.id = "id" + (++uiCounter);
-                    if (!containsInObj(els[element].attr, "text")) {
-                        var el = g.append(els[element].type).attr(els[element].attr);
-                        renderedElements.push(el);
-                    }
-                    else if (containsInObj(els[element].attr, "text")) {
-                        if (p.raze) {
-                            var el = formD3ChainCalls(g, "text#px" + uiCounter + "|id'px" + uiCounter).attr(els[element].attr);
-                            razeText(el, els[element].attr.text, "", els[element].attr.width, els[element].attr.props, null, tooltiper);
-                        }
-                        else for (var index in els[element].attr.strList) {
-                            var curStr = listOFStrings[index];
-                            var props = textInfo(curStr,p.textClass);
-                            var text = formD3ChainCalls(g, "text#px" + uiCounter + "_" + index + "|id'px" + uiCounter + "_" + index).attr(els[element].attr);
-                            renderedElements.push(text);
-                            razeText(text, curStr, "", els[element].attr.width, props, null, tooltiper);
-                            els[element].attr.y += els[element].attr.props.height - ti.baseLineHeight + p.vertMargin;
-                        }
-                    }
-                }
-            });
-        }
-
         return SimpleText;
     };
 
     UI.StructuredText = function (params) {
         var defaultParams = {struct_text: [
-            {name: "Test", val: [
-                {left: "трам-пам-пам", right: "Да"},
-                {left: "Lelele", right: "Дудудуд аа"}
-            ]},
-            {name: "Test", val: [
-                {left: "трам-пам-пам", right: "Да"},
-                {left: "Lelele", right: "Дудудуд аа"}
-            ]}
-        ],
+                {name: "Test", val: [
+                    {left: "трам-пам-пам", right: "Да"},
+                    {left: "Lelele", right: "Дудудуд аа"}
+                ]},
+                {name: "Test", val: [
+                    {left: "трам-пам-пам", right: "Да"},
+                    {left: "Pdf test", right: "http://example.com/file1.pdf"}
+                ]}
+            ],
             nameTextClass: "upper_element_text", valTextClass: "upper_element_text",
             percent_leftright: 50, indentBetweenLeftAndRight: 10, horIndent: 10, vertMargin: 3};
         var p = (arguments.length == 1) ? mergeProperties(params, defaultParams) : defaultParams;
@@ -616,7 +612,6 @@ kiv.UI = function (tooltiper) {
         var g = null;
         var tiName = textInfo("A", p.nameTextClass);
         var tiVal = textInfo("A", p.valTextClass);
-        var els = {textElements_a: []};
         var renderedElements = [];
         var numOfBlocks = p.struct_text.length;
         var numOfVals = 0;
@@ -628,31 +623,53 @@ kiv.UI = function (tooltiper) {
         }
 
         StructuredText.height = function (width) {
-            return (numOfBlocks * (tiName.height - tiName.baseLineHeight + p.vertMargin)) + (numOfVals * (tiVal.height - tiVal.baseLineHeight + p.vertMargin)) - p.vertMargin;
+            return (numOfBlocks * (tiName.offsetY + p.vertMargin)) + (numOfVals * (tiVal.offsetY + p.vertMargin)) - p.vertMargin;
         };
 
         StructuredText.render = function (parent, x, y, width) {
-            uiCounter++;
             if (g != null) {
                 g.text("");
-                els.textElements_a = [];
             }
-            g = formD3ChainCalls(parent, "g#id" + uiCounter + "|id'" + uiCounter);
-            var curY = y;
-            each(p.struct_text, function (d) {
-                var tiUp = textInfo(d.name, p.nameTextClass);
-                els.textElements_a.push({type: "text", attr: {props: tiUp, width: width, y: curY + tiUp.height - tiUp.baseLineHeight - 1, x: x, class: p.nameTextClass, text: d.name}});
-                curY += tiName.height - tiName.baseLineHeight + p.vertMargin;
-                each(d.val, function (pair) {
+            g = parent.append("svg:g");
+            var currentY = y;
+            each(p.struct_text, function (group) {
+                var tiGroupName = textInfo(group.name, p.nameTextClass);
+                var groupNameElement = g.append("text")
+                    .attr("width", width)
+                    .attr("x", x)
+                    .attr("y", currentY + tiGroupName.offsetY - 1)
+                    .attr("class", p.nameTextClass);
+                razeText(groupNameElement, group.name, "", width, tiGroupName, null, tooltiper);
+                renderedElements.push(groupNameElement);
+                currentY += tiName.offsetY + p.vertMargin;
+                each(group.val, function (pair) {
                     var tiLeft = textInfo(pair.left, p.valTextClass);
                     var tiRight = textInfo(pair.right, p.valTextClass);
-                    var yForLine = curY + tiUp.height - tiUp.baseLineHeight - 1;
-                    els.textElements_a.push({type: "text", attr: {props: tiLeft, width: (width * p.percent_leftright) / 100 - p.indentBetweenLeftAndRight / 2, y: yForLine, x: x + p.horIndent, class: p.valTextClass, text: pair.left}});
-                    els.textElements_a.push({type: "text", attr: {props: tiRight, width: (width * (100 - p.percent_leftright)) / 100 - p.indentBetweenLeftAndRight / 2, y: yForLine, x: x + p.horIndent + (width * p.percent_leftright) / 100 + p.indentBetweenLeftAndRight / 2, class: p.valTextClass, text: pair.right}});
-                    curY += tiVal.height - tiVal.baseLineHeight + p.vertMargin;
+                    var yForLine = currentY + tiGroupName.offsetY - 1;
+                    var leftElement = g.append("text")
+                        .attr("width", (width * p.percent_leftright) / 100 - p.indentBetweenLeftAndRight / 2)
+                        .attr("y", yForLine)
+                        .attr("x", x + p.horIndent)
+                        .attr("class",  p.valTextClass);
+                    var rightParent = mav.wrapHyperlink(g, pair.right);
+                    var xForRight = x + p.horIndent + (width * p.percent_leftright) / 100 + p.indentBetweenLeftAndRight / 2;
+                    var icon = mav.iconForUrl(rightParent, pair.right, tiRight.height * 0.8);
+                    var iconSize = icon != null ? tiRight.height : 0;
+                    if (icon != null) {
+                        icon.attr("x", xForRight + tiRight.height * 0.1).attr("y", currentY + tiRight.height * 0.1);
+                    }
+                    var rightElement = rightParent.append("text")
+                        .attr("width", (width * (100 - p.percent_leftright)) / 100 - p.indentBetweenLeftAndRight / 2)
+                        .attr("y", yForLine)
+                        .attr("x", xForRight + iconSize)
+                        .attr("class",  p.valTextClass);
+                    razeText(leftElement, pair.left, "", leftElement.attr("width"), tiLeft, null, tooltiper);
+                    razeText(rightElement, pair.right, "", rightElement.attr("width") - iconSize, tiRight, null, tooltiper);
+                    currentY += tiVal.offsetY + p.vertMargin;
+                    renderedElements.push(leftElement);
+                    renderedElements.push(rightElement);
                 });
             });
-            renderAllElements();
         };
 
         StructuredText.setAction = function (targetAction, functor) {
@@ -660,23 +677,6 @@ kiv.UI = function (tooltiper) {
                 d.on(targetAction, functor);
             });
         };
-
-        function renderAllElements() {
-            each(objToArrayKeys(els), function (element) {
-                if (els[element] != null) {
-                    each(els[element], function (d) {
-                        d.attr.id = "id" + (++uiCounter);
-                        var el = g.append(d.type).attr(d.attr);
-                        if (containsInObj(d.attr, "text")) {
-                            razeText(el, d.attr.text, "", d.attr.width, d.attr.props, null, tooltiper);
-                        } else if (d.type == "g") {
-                            d.attr.container.render(el, d.attr.x, d.attr.y, d.attr.width);
-                        }
-                        renderedElements.push(el);
-                    });
-                }
-            });
-        }
 
         return StructuredText;
     };
@@ -742,6 +742,58 @@ kiv.UI = function (tooltiper) {
     return UI;
 };
 
+mav = {}
+mav.iconForUrl = function (parent, url, size) {
+    function endsWith(text, suffix) {
+        var index = url.lastIndexOf(suffix);
+        return index >= 0 && index == text.length - suffix.length;
+    }
+    if (!mav.isUrl(url))
+        return null;
+    var imageUrl;
+    if (endsWith(url, "pdf")) {
+        imageUrl = "../images/icons/pdf.svg";
+    } else if (endsWith(url, "doc") || endsWith(url, "docx") || endsWith(url, "docm")) {
+        imageUrl = "../images/icons/doc.svg";
+    } else if (endsWith(url, "xls") || endsWith(url, "xlsx") || endsWith(url, "xlsm")) {
+        imageUrl = "../images/icons/xls.svg";
+    } else if (endsWith(url, "ppt") || endsWith(url, "pptx") || endsWith(url, "pptm")) {
+        imageUrl = "../images/icons/ppt.svg";
+    } else if (url.match(/^(https?:\/\/)?([wW][wW][wW]\.)?youtube\.com/)) {
+        imageUrl = "../images/icons/youtube.svg";
+    } else {
+        return null;
+    }
+    return parent.append("svg:image")
+        .attr("width", size)
+        .attr("height", size)
+        .attr("xlink:href", imageUrl);
+}
+// строка является URL, если соблюдается любое из условий:
+// * начинается с http:// etc
+// * имеет вид www.<name1>.<...>.<nameN>
+// * начинается с / или ./ или ../
+mav.isUrl = function (text) {
+    return text.match(/^(http|ftp|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-@?^=%&amp;/~\+#])?\s*$/)
+        || text.match(/^([wW][wW][wW]\.)?[a-zA-Z]+[a-zA-Z-]*(\.[a-zA-Z]+)+\/?([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-@?^=%&amp;/~\+#])?\s*$/)
+        || text.match(/^\.?\.?\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-@?^=%&amp;/~\+#])?\s*$/);
+}
+mav.wrapHyperlink = function (hyperlinkParent, textOrHyperlink) {
+    function startsWith(text, prefix) {
+        return text.indexOf(prefix) == 0;
+    }
+    if (mav.isUrl(textOrHyperlink)) {
+        if (!startsWith(textOrHyperlink, "http") && !startsWith(textOrHyperlink, "ftp")
+            && !startsWith(textOrHyperlink, ".") && !startsWith(textOrHyperlink, "/")) {
+            textOrHyperlink = "http://" + textOrHyperlink;
+        }
+        return hyperlinkParent.append("svg:a")
+            .attr("xlink:href", textOrHyperlink)
+            .attr("class", "hyperlink");
+    } else {
+        return hyperlinkParent;
+    }
+}
 //-----------------------------------------------------------------------------------------
 //-----------------------------------------/GOOD PLOTS
 //-----------------------------------------------------------------------------------------
