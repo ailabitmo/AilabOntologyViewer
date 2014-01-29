@@ -568,7 +568,7 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
 
                 a.render(d3.select(this), -(nodeWidth - nodeDif) / 2, -a.height(nodeWidth - nodeDif) / 2, nodeWidth - nodeDif);
                 if (containsInObj(d, 'classes'))
-                    a.setAction("mousedown.open", function () {
+                    a.setAction("click.open", function () {
                         centerActionGenerator(imbaelement, d)();
                         paintAll(svg, root, leftActionGenerator, centerActionGenerator, rightActionForLeafs);
                     });

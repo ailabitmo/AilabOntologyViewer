@@ -485,9 +485,9 @@ kiv.UI = function (tooltiper) {
             //return vertMargin + (listOFStrings.length * (ti.height - 2 * ti.baseLineHeight + vertMargin));
         };
 
-        NiceRoundRectangle.setAction = function (targetAction, functor) {
+        NiceRoundRectangle.setAction = function (targetAction, functor, capture) {
             each(renderedElements, function (d) {
-                d.on(targetAction, functor);
+                d.on(targetAction, functor, capture);
             });
         };
 
@@ -540,7 +540,6 @@ kiv.UI = function (tooltiper) {
         var p = (arguments.length == 1) ? mergeProperties(params, defaultParams) : defaultParams;
 
         var ti = textInfo(p.text, p.textClass);
-        var g = null;
         var renderedElements = [];
 
         function SimpleText() {
@@ -585,9 +584,9 @@ kiv.UI = function (tooltiper) {
             }
         };
 
-        SimpleText.setAction = function (targetAction, functor) {
+        SimpleText.setAction = function (targetAction, functor, capture) {
             each(renderedElements, function (d) {
-                d.on(targetAction, functor);
+                d.on(targetAction, functor, capture);
             });
         };
 
@@ -672,9 +671,9 @@ kiv.UI = function (tooltiper) {
             });
         };
 
-        StructuredText.setAction = function (targetAction, functor) {
+        StructuredText.setAction = function (targetAction, functor, capture) {
             each(renderedElements, function (d) {
-                d.on(targetAction, functor);
+                d.on(targetAction, functor, capture);
             });
         };
 
@@ -715,9 +714,9 @@ kiv.UI = function (tooltiper) {
             renderAllElements();
         };
 
-        LayoutContainer1.setAction = function (targetAction, functor) {
+        LayoutContainer1.setAction = function (targetAction, functor, capture) {
             each(renderedElements, function (d) {
-                d.on(targetAction, functor);
+                d.on(targetAction, functor, capture);
             });
         };
 
@@ -789,7 +788,10 @@ mav.wrapHyperlink = function (hyperlinkParent, textOrHyperlink) {
         }
         return hyperlinkParent.append("svg:a")
             .attr("xlink:href", textOrHyperlink)
-            .attr("class", "hyperlink");
+            .attr("class", "hyperlink")
+            .on("click", function () {
+                d3.event.stopPropagation();
+            });
     } else {
         return hyperlinkParent;
     }
