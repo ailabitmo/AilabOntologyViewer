@@ -555,25 +555,31 @@ kiv.UI = function (tooltiper) {
         };
 
         SimpleText.render = function (parent, x, y, width) {
-            var textParent = mav.wrapHyperlink(p.raze ? parent : parent.append("g"), p.text);
-            var icon = mav.iconForUrl(textParent, p.text, ti.height * 0.8);
-            var iconSize = icon != null ? ti.height : 0;
-            if (icon != null) {
-                icon.attr("x", x + ti.height * 0.1).attr("y", y + ti.height * 0.1);
+            var hyperlink = mav.wrapHyperlink(p.raze ? parent : parent.append("g"), p.text);
+            ti = textInfo(hyperlink.text);
+            var iconSize = hyperlink.icon != null ? ti.height : 0;
+            if (hyperlink.icon != null) {
+                hyperlink.icon
+                    .attr("x", x + ti.height * 0.1)
+                    .attr("y", y + ti.height * 0.1)
+                    .attr("width", ti.height * 0.8)
+                    .attr("height", ti.height * 0.8);
             }
             if (p.raze) {
-                var textElement = textParent.append("text")
+                var textElement = hyperlink.parent.append("text")
                     .attr("width", width)
                     .attr("y", y + ti.offsetY)
                     .attr("x", x + iconSize)
                     .attr("class", p.textClass);
-                razeText(textElement, p.text, "", width - iconSize, ti, null, tooltiper);
+                razeText(textElement, hyperlink.text, "", width - iconSize, ti, null, tooltiper);
+                if (hyperlink.url != null && tooltiper != null)
+                    tooltiper.AddToolTip(textElement, function () { return hyperlink.url; });
                 renderedElements.push(textElement);
             } else {
-                var textLines = splitIntoLines(function (i) {return width - (i == 0 ? iconSize : 0);}, p.text, p.textClass);
+                var textLines = splitIntoLines(function (i) {return width - (i == 0 ? iconSize : 0);}, hyperlink.text, p.textClass);
                 for (var i = 0; i < textLines.length; i++) {
                     var lineText = textLines[i];
-                    var lineElement = textParent.append("text")
+                    var lineElement = hyperlink.parent.append("text")
                         .attr("width", width)
                         .attr("y", y + ti.offsetY + (ti.offsetY + p.vertMargin) * i)
                         .attr("x", x + (i == 0 ? iconSize : 0))
@@ -643,27 +649,32 @@ kiv.UI = function (tooltiper) {
                 currentY += tiName.offsetY + p.vertMargin;
                 each(group.val, function (pair) {
                     var tiLeft = textInfo(pair.left, p.valTextClass);
-                    var tiRight = textInfo(pair.right, p.valTextClass);
                     var yForLine = currentY + tiGroupName.offsetY - 1;
                     var leftElement = g.append("text")
                         .attr("width", (width * p.percent_leftright) / 100 - p.indentBetweenLeftAndRight / 2)
                         .attr("y", yForLine)
                         .attr("x", x + p.horIndent)
                         .attr("class",  p.valTextClass);
-                    var rightParent = mav.wrapHyperlink(g, pair.right);
+                    var hyperlink = mav.wrapHyperlink(g, pair.right);
+                    var tiRight = textInfo(hyperlink.text);
                     var xForRight = x + p.horIndent + (width * p.percent_leftright) / 100 + p.indentBetweenLeftAndRight / 2;
-                    var icon = mav.iconForUrl(rightParent, pair.right, tiRight.height * 0.8);
-                    var iconSize = icon != null ? tiRight.height : 0;
-                    if (icon != null) {
-                        icon.attr("x", xForRight + tiRight.height * 0.1).attr("y", currentY + tiRight.height * 0.1);
+                    var iconSize = hyperlink.icon != null ? tiRight.height : 0;
+                    if (hyperlink.icon != null) {
+                        hyperlink.icon
+                            .attr("x", xForRight + tiRight.height * 0.1)
+                            .attr("y", currentY + tiRight.height * 0.1)
+                            .attr("width", tiRight.height * 0.8)
+                            .attr("height", tiRight.height * 0.8);
                     }
-                    var rightElement = rightParent.append("text")
+                    var rightElement = hyperlink.parent.append("text")
                         .attr("width", (width * (100 - p.percent_leftright)) / 100 - p.indentBetweenLeftAndRight / 2)
                         .attr("y", yForLine)
                         .attr("x", xForRight + iconSize)
                         .attr("class",  p.valTextClass);
                     razeText(leftElement, pair.left, "", leftElement.attr("width"), tiLeft, null, tooltiper);
-                    razeText(rightElement, pair.right, "", rightElement.attr("width") - iconSize, tiRight, null, tooltiper);
+                    razeText(rightElement, hyperlink.text, "", rightElement.attr("width") - iconSize, tiRight, null, tooltiper);
+                    if (hyperlink.url != null && tooltiper != null)
+                        tooltiper.AddToolTip(rightElement, function () { return hyperlink.url; });
                     currentY += tiVal.offsetY + p.vertMargin;
                     renderedElements.push(leftElement);
                     renderedElements.push(rightElement);
@@ -742,59 +753,82 @@ kiv.UI = function (tooltiper) {
 };
 
 mav = {}
-mav.iconForUrl = function (parent, url, size) {
-    function endsWith(text, suffix) {
-        var index = url.lastIndexOf(suffix);
-        return index >= 0 && index == text.length - suffix.length;
+/**
+ * text is a URL, if any below condition is met:
+ *  - starts with http:// etc
+ *  - looks like www.<name1>.<...>.<nameN>
+ *  - starts with / или ./ или ../
+ */
+mav.matchUrl = function (text) {
+    function nullIfUndefined(value) {
+        return value === undefined ? null : value;
     }
-    if (!mav.isUrl(url))
-        return null;
-    var imageUrl;
-    if (endsWith(url, "pdf")) {
+    var match = text.match(/^(http|ftp|https):\/\/([\w\-_]+(?:\.[\w\-_]+)+)([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-@?^=%&amp;/~\+#])?\s*$/);
+    if (match)
+        return {protocol: match[1], host: match[2], path: nullIfUndefined(match[3])};
+    match = text.match(/^([a-zA-Z]+[a-zA-Z-]*(?:\.[a-zA-Z]+[a-zA-Z-]*)+)(\/[\w\-\.,@?^=%&amp;:/~\+#]*[\w\-@?^=%&amp;/~\+#])?\s*$/);
+    if (match)
+        return {protocol: null, host: match[1], path: nullIfUndefined(match[2])};
+    match = text.match(/^(\.{0,2}\/[\w\-\.,@?^=%&amp;:/~\+#]*[\w\-@?^=%&amp;/~\+#])\s*$/);
+    if (match)
+        return {protocol: null, host: null, path: nullIfUndefined(match[1])};
+    return null;
+}
+/**
+ * Creates a parent for a hyperlink content and (for some URLs) appends an icon.
+ * Doesn't do anything if textOrUrl isn't a URL.
+ * @returns {
+ *     parent: <new parent selector for link content>,
+ *     text: <text or url to display>,
+ *     icon: <icon selector if present; otherwise null>
+ *     url: <url if present; otherwise null>
+ * }
+ */
+mav.wrapHyperlink = function (hyperlinkParent, textOrUrl) {
+    function emptyIfNull(text) {
+        return text == null ? "" : text;
+    }
+    function getFileName(path, extension) {
+        var match = new RegExp("([\\w\\.\\+\\-]+)\\." + extension + "$", "i").exec(path);
+        return match ? match[1] : null;
+    }
+    var match = mav.matchUrl(textOrUrl);
+    if (!match) {
+        return {parent: hyperlinkParent, text: textOrUrl};
+    }
+    var url = textOrUrl;
+    var text = textOrUrl;
+    if (match.protocol != null) {
+        text = emptyIfNull(match.host) + emptyIfNull(match.path);
+    } else if (match.host != null) {
+        url = "http://" + textOrUrl;
+    }
+    var path = match.path;
+    var imageUrl = null;
+    var fileName;
+    if (fileName = getFileName(path, "pdf")) {
         imageUrl = "../images/icons/pdf.svg";
-    } else if (endsWith(url, "doc") || endsWith(url, "docx") || endsWith(url, "docm")) {
+    } else if (fileName = getFileName(path, "(?:doc|docx|docm)")) {
         imageUrl = "../images/icons/doc.svg";
-    } else if (endsWith(url, "xls") || endsWith(url, "xlsx") || endsWith(url, "xlsm")) {
+    } else if (fileName = getFileName(path, "(?:xls|xlsx|xlsm)")) {
         imageUrl = "../images/icons/xls.svg";
-    } else if (endsWith(url, "ppt") || endsWith(url, "pptx") || endsWith(url, "pptm")) {
+    } else if (fileName = getFileName(path, "(?:ppt|pptx|pptm)")) {
         imageUrl = "../images/icons/ppt.svg";
-    } else if (url.match(/^(https?:\/\/)?([wW][wW][wW]\.)?youtube\.com/)) {
+    } else if (/youtube\.com$/i.test(match.host)) {
         imageUrl = "../images/icons/youtube.svg";
-    } else {
-        return null;
     }
-    return parent.append("svg:image")
-        .attr("width", size)
-        .attr("height", size)
-        .attr("xlink:href", imageUrl);
-}
-// строка является URL, если соблюдается любое из условий:
-// * начинается с http:// etc
-// * имеет вид www.<name1>.<...>.<nameN>
-// * начинается с / или ./ или ../
-mav.isUrl = function (text) {
-    return text.match(/^(http|ftp|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-@?^=%&amp;/~\+#])?\s*$/)
-        || text.match(/^([wW][wW][wW]\.)?[a-zA-Z]+[a-zA-Z-]*(\.[a-zA-Z]+)+\/?([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-@?^=%&amp;/~\+#])?\s*$/)
-        || text.match(/^\.?\.?\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-@?^=%&amp;/~\+#])?\s*$/);
-}
-mav.wrapHyperlink = function (hyperlinkParent, textOrHyperlink) {
-    function startsWith(text, prefix) {
-        return text.indexOf(prefix) == 0;
+    var parent = hyperlinkParent.append("svg:a")
+        .attr("xlink:href", url)
+        .attr("class", "hyperlink")
+        .on("click", function () {
+            d3.event.stopPropagation();
+        });
+    var icon = null;
+    if (imageUrl != null) {
+        icon = parent.append("svg:image")
+            .attr("xlink:href", imageUrl);
     }
-    if (mav.isUrl(textOrHyperlink)) {
-        if (!startsWith(textOrHyperlink, "http") && !startsWith(textOrHyperlink, "ftp")
-            && !startsWith(textOrHyperlink, ".") && !startsWith(textOrHyperlink, "/")) {
-            textOrHyperlink = "http://" + textOrHyperlink;
-        }
-        return hyperlinkParent.append("svg:a")
-            .attr("xlink:href", textOrHyperlink)
-            .attr("class", "hyperlink")
-            .on("click", function () {
-                d3.event.stopPropagation();
-            });
-    } else {
-        return hyperlinkParent;
-    }
+    return {parent: parent, text: fileName != null ? fileName : text, icon: icon, url: url};
 }
 //-----------------------------------------------------------------------------------------
 //-----------------------------------------/GOOD PLOTS
