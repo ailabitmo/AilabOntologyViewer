@@ -251,7 +251,7 @@ kiv.graphStuff.graph = function (outer, linesFirst) {
  * @param borderfill цвет заливки границы. Можно оставить белым.
  * @param scaleExtent это массив-пара, задающая границы зуминга, например [0.5,2]
  */
-kiv.zoomingArea = function (width, height, baseElementForOuter, borderfill, scaleExtent) {
+kiv.zoomingArea = function (width, height, baseElementForOuter, borderfill, scaleExtent, innerFill) {
     var zoomingGroup, outerGroup, zoom, x, y, trans = [0, 0], scale = 1;
 
     x = d3.scale.linear().domain([-width / 2, width / 2]).range([0, width]);
@@ -264,7 +264,8 @@ kiv.zoomingArea = function (width, height, baseElementForOuter, borderfill, scal
         .append('svg:g')
         .call(zoom);
 
-    addBorderRect(outerGroup, width, height, 1, borderfill);
+    if(arguments.length==5) innerFill = "white";
+    addBorderRect(outerGroup, width, height, 1, borderfill).attr("fill",innerFill);
 
     //В этой группе внутри все будет перемещаться
     zoomingGroup = outerGroup.append('svg:g');

@@ -4,7 +4,7 @@
 var tooltip = kiv.tooltip("tooltip");
 kiv.graphStuff.ontologyViewerTreeNew = function (params) {
     var defaultParams = {
-        width: 1200, height: 600, nodewidth: 330, nodeDif: 100, heightPerTextLine: 1,
+        width: 1200, height: 600, nodewidth: 250, nodeDif: 25, heightPerTextLine: 1,
         heightBetweenNodesOfOneParent: 10, heightBetweenNodesOfDifferentParent: 40,
         animdur: 500, containerid: 'chart', buttonWidth: 0,buttonWidth2: 15, textInLine: 35,
         tooltiper:tooltip
@@ -140,9 +140,9 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
      .attr("stroke", 'blue')
      .attr("stroke-width", 2);*/
 
-    var zoomer = kiv.zoomingArea(w, h, zoomPart, 'white', [0.6, 2]);
+    var zoomer = kiv.zoomingArea(w, h, zoomPart, 'white', [0.6, 2], d3.rgb(250,250,250).toString());
     zoomer.getOuterGroup().on("dblclick.zoom", null);
-    zoomer.translate(-nodeWidth/2, h / 2);
+    //zoomer.translate(-nodeWidth/2, h / 2);
 
 
     svg = zoomer.getZoomingGroup();
@@ -245,6 +245,8 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
                     }
                 }
             );
+
+            zoomer.translate(-root.y+nodeWidth/2, -root.x+h/2);
         },function(d){
             indi.error();
             return;
@@ -318,7 +320,7 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
         var imbaelement = formD3ChainCalls(svgParent, "g#imbah|id'imbah");
         imbaelement.text('');
         var forLinks = formD3ChainCalls(svgParent, "g#linkers|id'linkers");
-        forLinks.attr('transform', 'translate(' + nodeWidth + ',' + 0 + ')');
+        //forLinks.attr('transform', 'translate(' + nodeWidth + ',' + 0 + ')');
         var link = forLinks.selectAll(".link")
             .data(links, function (d) {
                 return d.source.name + (containsInObj(d.source, 'cloned') ? d.source.cloned : "") + "_" + d.target.name + (containsInObj(d.target, 'cloned') ? d.target.cloned : "");
@@ -382,7 +384,7 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
             .style('opacity', 0).remove();
 
         var forNodes = formD3ChainCalls(svgParent, "g#noderz|id'noderz");
-        forNodes.attr('transform', 'translate(' + nodeWidth + ',' + 0 + ')');
+        //forNodes.attr('transform', 'translate(' + nodeWidth + ',' + 0 + ')');
         var node = forNodes.selectAll(".node").data(nodes, function (d) {
             var name = d.name + ((('children' in d) || ('_children' in d)) ? "_children" : "_nochildren");
             if ('cloned' in d) name += d.cloned;
