@@ -2,11 +2,12 @@ package ru.ifmo.ailab.ontology.viewer.base.imp.rootviewer.modelBuilder;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.ifmo.ailab.ontology.viewer.base.utils.MainOntoCache;
+import ru.ifmo.ailab.ontology.viewer.base.utils.OntoItem;
 import ru.spb.kpit.kivan.General.Strings.StringUtils;
 import ru.ifmo.ailab.ontology.viewer.base.imp.rootviewer.ViewerRequestAndContextModel;
 import ru.ifmo.ailab.ontology.viewer.base.imp.rootviewer.ontoModel.*;
-import ru.ifmo.ailab.ontology.viewer.base.imp.rootviewer.ontoModel.utils.MainOntoCache;
-import ru.ifmo.ailab.ontology.viewer.base.imp.rootviewer.ontoModel.utils.OntoItem;
+
 import ru.ifmo.ailab.ontology.viewer.base.imp.rootviewer.ontoModel.utils.UtilStructures;
 
 /**
@@ -69,9 +70,7 @@ public abstract class AModelBuilder<OI extends OntoItem> {
     }
     public static final String DEFAULT_PREFIX =
             "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n" +
-            "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
-            "PREFIX owl: <http://www.w3.org/2002/07/owl#>\n";
+                    "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
+                    "PREFIX owl: <http://www.w3.org/2002/07/owl#>\n";
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 }
-
-

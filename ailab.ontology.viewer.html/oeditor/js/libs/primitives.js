@@ -7,7 +7,7 @@
 //-----------------------------------------D3 helper functions
 //-----------------------------------------------------------------------------------------
 
-function self(incoming){return incoming};
+function self(incoming){return incoming;};
 
 /**
  * Сформировать цепочку вызовов через заданную строку.
@@ -552,6 +552,14 @@ function clearLog() {
 //-----------------------------------------------------------------------------------------
 //-----------------------------------------Useful util functions
 //-----------------------------------------------------------------------------------------
+
+/**
+ * Guid в соответствии с rfc4122
+ * @returns {string}
+ */
+function guid(){
+    return uuid.v4();
+}
 /**
  * Формирует удобный для работы объект из результата спаркловского запроса.
  * В запросе одно поле должно присутствовать в каждой строке - это идентификатор
@@ -875,6 +883,7 @@ function sparqlQueryJson(queryStr, endpoint, callback, errorHandler) {
 function sparqlQueryJsonThroughService(queryStr, endpoint, defaultGraph, serviceUrl, callback, errorHandler) {
     errorHandler = (arguments.length == 4) ? errorHandler : function (d) {
     };
+    //var format = "SPARQL/JSON";
     var format = "JSON";
     var querypart = endpoint+ ((defaultGraph)?"$?default-graph-uri=" + encodeURIComponent("http://dbpedia.org")+"&":"$?")+"query="+encodeURIComponent(queryStr) + "&format=" + encodeURIComponent(format);
     querypart = querypart.replace(/&&/g, '+%26%26+');
@@ -920,11 +929,8 @@ function sparqlQueryJsonThroughService(queryStr, endpoint, defaultGraph, service
 function queryService(queryStr, serviceUrl, callback, errorHandler) {
     errorHandler = (arguments.length == 4) ? errorHandler : function (d) {
     };
-    var format = "SPARQL/JSON";
     var querypart = queryStr;
     //http://localhost/oed/mirror/?http://localhost:8888/sparql$?query=select%20*%20where%20%7B?a%20?b%20rdfs:label%0A%7D&format=SPARQL/JSON;
-
-
     var xmlhttp = null;
     if (window.XMLHttpRequest) {
         xmlhttp = new XMLHttpRequest();

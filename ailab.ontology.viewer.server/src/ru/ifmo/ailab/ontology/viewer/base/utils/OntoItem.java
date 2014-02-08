@@ -1,4 +1,4 @@
-package ru.ifmo.ailab.ontology.viewer.base.imp.rootviewer.ontoModel.utils;
+package ru.ifmo.ailab.ontology.viewer.base.utils;
 
 /**
  * IDEA
@@ -22,5 +22,4 @@ public abstract class OntoItem extends ObjectWithId {
     public void setLabel(String label) {
         this.label = label;
     }
-
 }

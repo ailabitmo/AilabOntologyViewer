@@ -12,4 +12,12 @@
         <servlet-name>OEDServlet</servlet-name>
         <url-pattern>/aov/*</url-pattern>
     </servlet-mapping>
+    <servlet>
+        <servlet-name>TestServlet</servlet-name>
+        <servlet-class>ru.ifmo.ailab.ontology.viewer.TestServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>TestServlet</servlet-name>
+        <url-pattern>/test/*</url-pattern>
+    </servlet-mapping>
 </web-app>

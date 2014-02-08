@@ -9,6 +9,7 @@
  */
 
 
+
 var endpoint = window.location.protocol + "//" + window.location.host + "/sparql";
 
 /**

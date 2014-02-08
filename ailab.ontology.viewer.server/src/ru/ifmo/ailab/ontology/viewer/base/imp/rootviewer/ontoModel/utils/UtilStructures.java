@@ -42,7 +42,7 @@ public class UtilStructures {
             obj.put("id", getJsonString(ci.getId()));
             obj.put("label", getJsonString(ci.getLabel()));
             obj.put("parent", getJsonString((ci.getParentClass() != null) ? ci.getParentClass().getId() : ""));
-            addClassInfo(ci.getParentClass());// todo Это обязательно надо делать для связанных объектов иначе будет кэшироваться не до конца
+            addClassInfo(ci.getParentClass());//  Это обязательно надо делать для связанных объектов иначе будет кэшироваться не до конца
 
             filledClasses.put(ci.getId(), obj);
         }
@@ -67,7 +67,7 @@ public class UtilStructures {
     }
 
     public void addObject(SimpleOntoObject soo) {
-        if (soo != null /*&& !filledObjects.hasKey(soo.getId()) &&*/) {//todo !!!!!!!!!!!!!!!!!!!!! ПЕРЕДЕЛАТЬ! Необходимо, чтобы объекты формировались по результату, а не в процессе получения Иначе тут бага
+        if (soo != null /*&& !filledObjects.hasKey(soo.getId()) &&*/) {// !!!!!!!!!!!!!!!!!!!!! ПЕРЕДЕЛАТЬ! Необходимо, чтобы объекты формировались по результату, а не в процессе получения Иначе тут бага
             JsonObject obj = new JsonObject();
             obj.put("id", getJsonString(soo.getId()));
             obj.put("label", getJsonString(soo.getLabel()));
@@ -79,7 +79,7 @@ public class UtilStructures {
                 }
                 arr.add(getJsonString(classInfo != null ? classInfo.getId() : ""));
             }
-            addClassesInfo(soo.getObjClass());// todo Это обязательно надо делать для связанных объектов иначе будет кэшироваться не до конца
+            addClassesInfo(soo.getObjClass());//  Это обязательно надо делать для связанных объектов иначе будет кэшироваться не до конца
 
             JsonObject dataProps = new JsonObject();
             obj.put("dataProps", dataProps);
@@ -87,7 +87,7 @@ public class UtilStructures {
                 JsonObject opp = new JsonObject();
                 dataProps.put(dpv.getDpInfo() != null ? dpv.getDpInfo().getId() : "", opp);
                 opp.put("id", dpv.getDpInfo() != null ? dpv.getDpInfo().getId() : "");
-                addDataPropertyInfo(dpv.getDpInfo());// todo Это обязательно надо делать для связанных объектов иначе будет кэшироваться не до конца
+                addDataPropertyInfo(dpv.getDpInfo());//  Это обязательно надо делать для связанных объектов иначе будет кэшироваться не до конца
                 opp.put("val", dpv.getValue());
             }
 
@@ -97,13 +97,13 @@ public class UtilStructures {
                 obj.put("inObjProps", inObjProps);
                 for (ObjectPropertyValue opv : sooo.getInObjectProperties()) {
                     JsonArray arrayOfVlas = (JsonArray) inObjProps.get(opv.getProperty().getId());
-                    addObjPropertyInfo(opv.getProperty());// todo Это обязательно надо делать для связанных объектов иначе будет кэшироваться не до конца
+                    addObjPropertyInfo(opv.getProperty());//  Это обязательно надо делать для связанных объектов иначе будет кэшироваться не до конца
                     if (arrayOfVlas == null) {
                         arrayOfVlas = new JsonArray();
                         inObjProps.put(opv.getProperty().getId(), arrayOfVlas);
                     }
                     arrayOfVlas.add(opv.getOtherObject() != null ? opv.getOtherObject().getId() : "");
-                    addObject(opv.getOtherObject());// todo Это обязательно надо делать для связанных объектов иначе будет кэшироваться не до конца
+                    addObject(opv.getOtherObject());//  Это обязательно надо делать для связанных объектов иначе будет кэшироваться не до конца
                 }
 
                 JsonObject outObjProps = new JsonObject();
@@ -111,13 +111,13 @@ public class UtilStructures {
                 for (ObjectPropertyValue opv : sooo.getOutObjectProperties()) {
 
                     JsonArray arrayOfVlas = (JsonArray) outObjProps.get(opv.getProperty().getId());
-                    addObjPropertyInfo(opv.getProperty());// todo Это обязательно надо делать для связанных объектов иначе будет кэшироваться не до конца
+                    addObjPropertyInfo(opv.getProperty());//  Это обязательно надо делать для связанных объектов иначе будет кэшироваться не до конца
                     if (arrayOfVlas == null) {
                         arrayOfVlas = new JsonArray();
                         outObjProps.put(opv.getProperty().getId(), arrayOfVlas);
                     }
                     arrayOfVlas.add(opv.getOtherObject() != null ? opv.getOtherObject().getId() : "");
-                    addObject(opv.getOtherObject());// todo Это обязательно надо делать для связанных объектов иначе будет кэшироваться не до конца
+                    addObject(opv.getOtherObject());//  Это обязательно надо делать для связанных объектов иначе будет кэшироваться не до конца
                 }
             }
 

@@ -20,14 +20,13 @@ var arrayOfDataPropsVals = null;
 function startIt(divId, service, spaendpoint, pathToX) {
     pathTo = pathToX;
     var ontologyViewerTree = kiv.graphStuff.ontologyViewerTreeNew({width:$(window).width()-20,height:$(window).height()-20,containerid:divId});
-    ontologyViewerTree.render({idOfInstance: pathTo, requestString: getRequestToInstance(pathTo),
+    ontologyViewerTree.render({idOfInstance: pathTo,
         sparqlEndpoint:spaendpoint, service:service});
 }
 
 var colorMap = d3.map();
 var lastIndex = 0;
 var param_maxValue = 360;// значение генерится от 0 до param_maxValue
-var sdvig = -180;//Сдвиг, позволяющий изменить цвета
 
 function getSomeObjectColor(objId) {
 
@@ -50,7 +49,7 @@ function getSomeObjectColor(objId) {
         var mult = (max - min) / (numoftimes);
         return min + mult * (d % numoftimes);
     };
-    var realColor = d3.hsl(Math.round(realHue)+sdvig, v((kiv.krand().rInt(0,100000)), 0.4, 0.8, 5), v((kiv.krand().rInt(0,100000)), 0.3, 0.6, 5)).toString();
+    var realColor = d3.hsl(Math.round(realHue), v((kiv.krand().rInt(0,100000)), 0.4, 0.8, 5), v((kiv.krand().rInt(0,100000)), 0.3, 0.6, 5)).toString();
     colorMap.set(objId, realColor);
     return realColor;
 }

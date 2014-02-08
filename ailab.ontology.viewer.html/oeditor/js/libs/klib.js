@@ -23,23 +23,23 @@ kiv.graphStuff.graph = function (outer, linesFirst) {
         linkCreator = function (link) {
             link.append('path').attr('stroke', 'black').attr('fill', 'none').attr('stroke-width', function (d, i) {
                 return '2px';
-            })
+            });
         },
         linkUpdater = function (link) {
             link.select('path').attr("d", function (d, i) {
                 return 'M' + d.source.x + ',' + d.source.y + 'L' + d.target.x + ',' + d.target.y
-            })
+            });
         },
         linkRemover = function (link) {
-            link.remove()
+            link.remove() ;
         },
         nodeCreator = function (node) {
-            node.append('circle').attr("r", 5)
+            node.append('circle').attr("r", 5) ;
         },
         nodeUpdater = function (node) {
             node.attr('transform', function (d, i) {
                 return 'translate(' + d.x + ',' + d.y + ')';
-            })
+            });
         },
         nodeRemover = function (node) {
             node.remove()
@@ -251,7 +251,7 @@ kiv.graphStuff.graph = function (outer, linesFirst) {
  * @param borderfill цвет заливки границы. Можно оставить белым.
  * @param scaleExtent это массив-пара, задающая границы зуминга, например [0.5,2]
  */
-kiv.zoomingArea = function (width, height, baseElementForOuter, borderfill, scaleExtent) {
+kiv.zoomingArea = function (width, height, baseElementForOuter, borderfill, scaleExtent, innerFill) {
     var zoomingGroup, outerGroup, zoom, x, y, trans = [0, 0], scale = 1;
 
     x = d3.scale.linear().domain([-width / 2, width / 2]).range([0, width]);
@@ -264,7 +264,8 @@ kiv.zoomingArea = function (width, height, baseElementForOuter, borderfill, scal
         .append('svg:g')
         .call(zoom);
 
-    addBorderRect(outerGroup, width, height, 1, borderfill);
+    if(arguments.length==5) innerFill = "white";
+    addBorderRect(outerGroup, width, height, 1, borderfill).attr("fill",innerFill);
 
     //В этой группе внутри все будет перемещаться
     zoomingGroup = outerGroup.append('svg:g');
@@ -311,9 +312,6 @@ kiv.zoomingArea = function (width, height, baseElementForOuter, borderfill, scal
         return [(coords[0] - trans[0]) / scale, (coords[1] - trans[1]) / scale];
     };
 
-    /**
-     * Выполняет перемещение к исходным координатам. Должно быть плавно, но не получилось пока
-     */
     zoomingArea.returnBack = function () {
         zoomingArea.translate(100, 100);
     };
@@ -321,10 +319,10 @@ kiv.zoomingArea = function (width, height, baseElementForOuter, borderfill, scal
     zoomingArea.translate = function (toX, toY) {
         d3.transition().duration(500).tween("zoom", function () {
             var trans = d3.interpolate(zoom.translate(), [toX, toY]);
-            //var scale = d3.interpolate(zoom.scale(), 1);
+            var scale = d3.interpolate(zoom.scale(), 1);
             return function (yyy) {
                 zoom.translate(trans(yyy));
-                //zoom.scale(scale(yyy));
+                zoom.scale(scale(yyy));
                 rescale();
             }
         });
@@ -468,7 +466,6 @@ kiv.UI = function (tooltiper) {
         var allHeight = null;
         var g = null;
         var roundXY = tiUp.height;
-        var bgSize = 5;
 
         var els = {bg_d: null, bigColoredRect_a: null, bigWhiteRect_b: null, smallWhite_c: null, upperText_d: null, container_e: null};
         var renderedElements = [];
@@ -742,7 +739,107 @@ kiv.UI = function (tooltiper) {
     return UI;
 };
 
-mav = {}
+/**
+ * Work logic:
+ * 1. Sending http [request] to [server url] with some [interval] in ms. Sent request also have a GUID string added to an end
+ * of the request line after [some prefix]. This guid could be used to identify request.
+ * 2. Server responds with one of three possible answers to each request: wait, finished or error.
+ * Each answer is identified by predefined prefix. After prefix, a string with info goes, describing the state
+ * (for finish for example it could be json of result, for error - error reason, for wait - some wait counter)
+ *      [wait answer prefix] - it means, we have to continue sending messages, because operation still in progress on server.
+ *      [finished answer prefix] - it means we have to finish sending messages, operation was successful.
+ *      [error answer prefix] - it means we have to finish sending messages, operation was not successful.
+ * 3. For each answer there is [handler], which takes a string parameter - substring of reply without prefix.
+ * Also wait handler don't need to resend message, it's done automatically.
+ * 4. There should be a possibility to cancel request.
+ * @param params
+ */
+kiv.smartServerRequest = function(params){
+    var defaultParams = {
+        request:"", url:"", interval:1000,
+        guidPrefix:"$@#$", cancelPrefix:"$!c#",
+        waitPrefix:"!w#", finishPrefix:"!f#", errorPrefix:"!e#",
+        waitHandler:function(str){},finishHandler:function(str){},errorHandler:function(str){}
+    };
+    var p = (arguments.length == 1) ? mergeProperties(params, defaultParams) : defaultParams;
+    var requestCancelled = false;
+    var guidD = guid();
+    var guidV = p.guidPrefix+ guidD;
+    var lasWaitResponse=null;
+    p.request += guidV;
+
+    var requestId = 0;
+
+    queryService(p.request+ p.guidPrefix+requestId++, p.url, requestHandler, function(){p.errorHandler("Connection error");});
+
+    function smartServerRequest(){}
+    smartServerRequest.cancel = function(){
+        /*requestCancelled=true;*/
+        queryService(p.cancelPrefix + guidV + p.guidPrefix+requestId++, p.url, requestHandler, function(){p.errorHandler("Connection error");});
+    };
+    smartServerRequest.getGuid = function(){return guidD;};
+    return smartServerRequest;
+
+    function requestHandler(serverResponse){
+        if(serverResponse==null || serverResponse == "") p.errorHandler("Server sent no response");
+        if(serverResponse.indexOf(p.waitPrefix)==0){
+            var response = serverResponse.substring(p.waitPrefix.length);
+            if(lasWaitResponse==null || lasWaitResponse!=response){
+                lasWaitResponse = response;
+                p.waitHandler(response);
+            }
+            setTimeout(
+                function(){
+                    if(!requestCancelled) queryService(p.request+ p.guidPrefix+requestId++, p.url, requestHandler, function(){p.errorHandler("Connection error");});
+                }, p.interval
+            );
+        } else if (serverResponse.indexOf(p.finishPrefix)==0) p.finishHandler(serverResponse.substring(p.finishPrefix.length));
+        else if (serverResponse.indexOf(p.errorPrefix)==0) p.errorHandler(serverResponse.substring(p.errorPrefix.length));
+        else p.errorHandler("Unknown response signature");
+    }
+};
+
+kiv.colorHelper = function(params){
+    function toRet(){}
+    var defaultParams = {};
+    var p = (arguments.length == 1) ? mergeProperties(params, defaultParams) : defaultParams;
+
+    var colorState = {
+        colorMap : d3.map(), //hashmap of class sequences to values
+        lastIndex : 0, // num of elements in colorMap
+        param_maxValue : 360 // значение генерится от 0 до param_maxValue
+    }
+    //Selects color for some object, depending on colorState
+    toRet.getSomeObjectColor = function(objId) {
+        if(colorState.colorMap.has(objId)) return colorState.colorMap.get(objId);//Если есть цвет в словаре - возвращаем
+
+        //если цвета нет, начинаем его формировать
+        colorState.lastIndex++;//Для начала понимаем, какой у нас элемент по счету.
+        var realHue = 0;
+        if(colorState.lastIndex==1) realHue = colorState.param_maxValue/2;
+        else {
+            var inBinary = (colorState.lastIndex).toString(2);//Переводим в бинарный вид
+            var delitelj = Math.pow(2,inBinary.length)/2;//Считаем делитель, число box-ов в уровне
+            var binaryIndex = inBinary.substring(1)//Считаем в бинарном виде индекс, в соответствующем уровне бинарного дерева (просто отрезаем старший бит)
+            var boxIndexInLevel = parseInt(binaryIndex,2);//Теперь индекс уже в десятичном виде
+            var razmer = colorState.param_maxValue/delitelj;//Размер box-а в уровне
+            realHue = boxIndexInLevel*razmer + razmer/2;//Применяем индекс и прибавляем еще половину размера box-a (центрируем)
+        }
+        var realColor = d3.hsl(Math.round(realHue), v((kiv.krand().rInt(0,100000)), 0.4, 0.8, 5), v((kiv.krand().rInt(0,100000)), 0.3, 0.6, 5)).toString();
+        colorState.colorMap.set(objId, realColor);
+        return realColor;
+    }
+
+    // numoftimes - должно быть простое число!!! Иначе получится меньше цветов.
+    function v(d, min, max, numoftimes) {
+        var mult = (max - min) / (numoftimes);
+        return min + mult * (d % numoftimes);
+    }
+
+    return toRet;
+};
+
+mav = {};
 mav.iconForUrl = function (parent, url, size) {
     function endsWith(text, suffix) {
         var index = url.lastIndexOf(suffix);
@@ -774,9 +871,11 @@ mav.iconForUrl = function (parent, url, size) {
 // * имеет вид www.<name1>.<...>.<nameN>
 // * начинается с / или ./ или ../
 mav.isUrl = function (text) {
+    if(text)
     return text.match(/^(http|ftp|https):\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-@?^=%&amp;/~\+#])?\s*$/)
         || text.match(/^([wW][wW][wW]\.)?[a-zA-Z]+[a-zA-Z-]*(\.[a-zA-Z]+)+\/?([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-@?^=%&amp;/~\+#])?\s*$/)
         || text.match(/^\.?\.?\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&amp;:/~\+#]*[\w\-@?^=%&amp;/~\+#])?\s*$/);
+    else false;
 }
 mav.wrapHyperlink = function (hyperlinkParent, textOrHyperlink) {
     function startsWith(text, prefix) {
@@ -797,3 +896,4 @@ mav.wrapHyperlink = function (hyperlinkParent, textOrHyperlink) {
 //-----------------------------------------------------------------------------------------
 //-----------------------------------------/GOOD PLOTS
 //-----------------------------------------------------------------------------------------
+

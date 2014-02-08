@@ -8,7 +8,7 @@ package ru.ifmo.ailab.ontology.viewer.base.interfaces;
  *
  * %%% Интерфейс модели
  */
-public interface IResponseModel<RESP extends IResponseModel> {
+public interface IResponseModel<RESP extends IResponseModel, RESULT> {
     /**
      * @return
      */
@@ -23,5 +23,5 @@ public interface IResponseModel<RESP extends IResponseModel> {
      * @param a
      * @return
      */
-    RESP init(Object a);
+    RESP init(RESULT a);
 }

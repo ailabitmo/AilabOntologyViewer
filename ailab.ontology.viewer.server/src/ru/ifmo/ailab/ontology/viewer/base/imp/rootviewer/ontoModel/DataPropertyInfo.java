@@ -1,6 +1,7 @@
 package ru.ifmo.ailab.ontology.viewer.base.imp.rootviewer.ontoModel;
 
-import ru.ifmo.ailab.ontology.viewer.base.imp.rootviewer.ontoModel.utils.OntoItem;
+
+import ru.ifmo.ailab.ontology.viewer.base.utils.OntoItem;
 
 /**
  * IDEA

@@ -1,5 +1,6 @@
 package ru.ifmo.ailab.ontology.viewer.base.imp.rootviewer.ontoModel;
 
+
 /**
  * IDEA
  * : Kivan
@@ -26,6 +27,7 @@ public class DataPropertyValue {
     }
 
     public String getValue() {
+        if(value==null) return "";
         return value;
     }
 

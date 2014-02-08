@@ -14,7 +14,7 @@
     <facet type="web" name="Web2">
       <configuration>
         <descriptors>
-          <deploymentDescriptor name="web.xml" url="file://$MODULE_DIR$/src/ru/ifmo/ailab/ontology/viewer/base/imp/rootviewer/ontoModel/DataPropertyValue.java" />
+          <deploymentDescriptor name="web.xml" url="file://$MODULE_DIR$/src/ru/ifmo/ailab/ontology/viewer/base/imp/pageViewer/ontoModel/models/dataprops/DataPropertyValue.java" />
         </descriptors>
         <webroots>
           <root url="file://$MODULE_DIR$/src/ru/ifmo/ailab/ontology/viewer/base/imp/rootviewer/ontoModel" relative="/WEB-INF" />

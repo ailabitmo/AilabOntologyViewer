@@ -10,7 +10,7 @@ import ru.ifmo.ailab.ontology.viewer.base.interfaces.IResponseModel;
  *
  * %%% Модель ответа для вспомогательного процессора
  */
-public class HelpResponseModel implements IResponseModel<HelpResponseModel> {
+public class HelpResponseModel implements IResponseModel<HelpResponseModel,String> {
 
     String helpString;
 
@@ -25,7 +25,7 @@ public class HelpResponseModel implements IResponseModel<HelpResponseModel> {
     }
 
     @Override
-    public HelpResponseModel init(Object a) {
+    public HelpResponseModel init(String a) {
         this.helpString = (String) a;
         return this;
     }

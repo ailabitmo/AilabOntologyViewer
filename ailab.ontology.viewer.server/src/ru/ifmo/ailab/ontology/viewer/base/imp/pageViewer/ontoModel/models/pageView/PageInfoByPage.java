@@ -1,4 +1,4 @@
-package ru.ifmo.ailab.ontology.viewer.base.imp.pageViewer;
+package ru.ifmo.ailab.ontology.viewer.base.imp.pageViewer.ontoModel.models.pageView;
 
 /**
  * IDEA
@@ -31,6 +31,11 @@ public class PageInfoByPage {
 
     public void setCurrentOffset(int currentOffset) {
         this.currentOffset = currentOffset;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("p.%s,l.%s",currentPage+"",currentLimit+"");
     }
 
     @Override

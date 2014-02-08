@@ -1,12 +1,13 @@
 package ru.ifmo.ailab.ontology.viewer;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import ru.ifmo.ailab.ontology.viewer.base.imp.help.HelpProcessor;
 import ru.ifmo.ailab.ontology.viewer.base.imp.help.HelpResponseModel;
 import ru.ifmo.ailab.ontology.viewer.base.imp.mirror.MirrorProcessor;
 import ru.ifmo.ailab.ontology.viewer.base.imp.mirror.MirrorRequestAndContextModel;
 import ru.ifmo.ailab.ontology.viewer.base.imp.mirror.MirrorResponseModel;
+import ru.ifmo.ailab.ontology.viewer.base.imp.pageViewer.PagedViewerProcessor;
+import ru.ifmo.ailab.ontology.viewer.base.imp.pageViewer.PagedViewerRequestAndContextModel;
+import ru.ifmo.ailab.ontology.viewer.base.imp.pageViewer.PagedViewerResponseModel;
 import ru.ifmo.ailab.ontology.viewer.base.imp.rootviewer.ViewerProcessor;
 import ru.ifmo.ailab.ontology.viewer.base.imp.rootviewer.ViewerRequestAndContextModel;
 import ru.ifmo.ailab.ontology.viewer.base.imp.rootviewer.ViewerResponseModel;
@@ -14,6 +15,8 @@ import ru.ifmo.ailab.ontology.viewer.base.interfaces.EmptyRequestAndContextModel
 import ru.ifmo.ailab.ontology.viewer.base.interfaces.IProcessor;
 import ru.ifmo.ailab.ontology.viewer.base.interfaces.IRequestAndContextModel;
 import ru.ifmo.ailab.ontology.viewer.base.interfaces.IResponseModel;
+import ru.ifmo.ailab.ontology.viewer.base.utils.LoggerWrapper;
+import ru.ifmo.ailab.ontology.viewer.base.utils.smartrequest.SmartRequest;
 import ru.spb.kpit.kivan.General.Strings.StringUtils;
 import ru.spb.kpit.kivan.Randomizer.Triad;
 
@@ -39,6 +42,8 @@ public class EditorServlet extends HttpServlet {
     static Map<String, Triad<Class, Class, Class>> processorMap = Collections.synchronizedMap(new HashMap<String, Triad<Class, Class, Class>>());
 
     static {
+        processorMap.put("pageviewer", new Triad<Class, Class, Class>
+                (PagedViewerRequestAndContextModel.class, PagedViewerResponseModel.class, PagedViewerProcessor.class));
         processorMap.put("rootviewer", new Triad<Class, Class, Class>
                 (ViewerRequestAndContextModel.class, ViewerResponseModel.class, ViewerProcessor.class));
         processorMap.put("mirror", new Triad<Class, Class, Class>
@@ -47,12 +52,11 @@ public class EditorServlet extends HttpServlet {
                 (EmptyRequestAndContextModel.class, HelpResponseModel.class, HelpProcessor.class));
     }
 
+
+
     public static Map<String, Triad<Class, Class, Class>> getTypeMap() {
         return processorMap;
     }
-
-    PrintWriter wr;
-    HttpServletResponse resp;
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -64,16 +68,19 @@ public class EditorServlet extends HttpServlet {
         process(req, resp);
     }
 
+    @Override
+    public void destroy() {
+        SmartRequest.stopAllThreads();
+    }
+
     private void process(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         //Profiler profiler = new SyncProfiler();
+        req.setCharacterEncoding("utf-8");
+        resp.setContentType("text/html");
+        resp.setCharacterEncoding("utf-8");
+        resp.setHeader("Access-Control-Allow-Origin", "*");
+        PrintWriter wr = resp.getWriter();
         try {
-            this.resp = resp;
-            req.setCharacterEncoding("utf-8");
-            resp.setContentType("text/html");
-            resp.setCharacterEncoding("utf-8");
-            resp.setHeader("Access-Control-Allow-Origin", req.getHeader("Origin"));
-            wr = resp.getWriter();
-
             String path = req.getPathInfo();
             String requestType;
             String parameters = null;
@@ -132,13 +139,13 @@ public class EditorServlet extends HttpServlet {
             }
             respMod = processoR.processRequest(requMod);
             String response = respMod.getResponseString();
-            //Logger.debug("Response:"+response);
+            logger.debug("Response:" + response);
             wr.append(response);
         } catch (Exception e) {
             logger.error("Exception in process", e);
         } finally {
             /*profiler.end("EditorServlet main");
-            Logger.debug(profiler.getInfo());*/
+            LoggerWrapper.debug(profiler.getInfo());*/
             try {
                 if (wr != null) wr.close();
             } catch (Exception e) {
@@ -147,6 +154,7 @@ public class EditorServlet extends HttpServlet {
         }
     }
 
-    private Logger logger = LoggerFactory.getLogger(this.getClass());
+    private LoggerWrapper logger = LoggerWrapper.getLogger(this.getClass());
+
 
 }

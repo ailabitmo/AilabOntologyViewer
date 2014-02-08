@@ -13,7 +13,6 @@ var Indicator = {
      * и заменяя его на анимацию ожидания.
      * @param svg - селектор SVG-элемента
      */
-
     create: function (svg) {
         var indicator = Object.create(this);
         indicator.wrapper = svg.append("svg:g");
@@ -47,6 +46,9 @@ var Indicator = {
     },
     error: function () {
         this.stop();
+    },
+    text:function(textToSet, textStyle){
+        //TODO Text must be set for indicator and it should be updated. Possibly create new indicator object?..
     },
     /**
      * Добавляет анимацию ожидания.

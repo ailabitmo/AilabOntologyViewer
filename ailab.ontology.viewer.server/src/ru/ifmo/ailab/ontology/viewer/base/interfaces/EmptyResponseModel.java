@@ -8,7 +8,7 @@ package ru.ifmo.ailab.ontology.viewer.base.interfaces;
  *
  * %%% Пустая модель ответа
  */
-public class EmptyResponseModel implements IResponseModel<EmptyResponseModel> {
+public class EmptyResponseModel implements IResponseModel<EmptyResponseModel,Object> {
     @Override
     public String getResponseString() {
         return "";

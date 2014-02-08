@@ -4,40 +4,8 @@
     <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
     <meta charset="utf-8">
 </head>
-<!--<body oncontextmenu="return false;">-->
-<div id='header'>
-    Введите префиксы классов онтологий через запятую:<br>
-    <!--<input style="width:800px;" type="text" id='prefixList' value="http://www.semanticweb.org/k0shk/ontologies/2013/5/learning#TheMainElementsOfOWL"/>-->
-    <input style="width:800px;" type="text" id='prefixList' value="http://www.owl-ontologies.com/Systemic_Project_ontology.owl"/>
-    <button onclick="startRequest();">Запросить</button>
-    <div id='oclist'></div>
-</div>
-<div id='middle'>
-    <div id='container'>
-        <div class = 'generalFilterList'>
-            <div class='header'><span id='classesNum'/></div>
-            <ul id ='classContainer' class="treeview-red"></ul>
-
-        </div>
-        <div class = 'generalFilterList'>
-            <div class='header'><span id='instancesNum'/></div>
-            <ul id ='instsContainer' class="treeview-red"></ul>
-        </div>
-
-        <div id='controls'>
-            <button onclick="ontologyViewer.zoomer().returnBack()" >В центр</button>
-            <button onclick="ontologyViewer.force().stop()" >Остановить анимацию</button>
-            <button onclick="ontologyViewer.force().start()" >Включить анимацию</button>
-        </div>
-        <div id='chart'></div>
-        <div id='entityEditor'></div>
-    </div>
-</div>
-<div id='footer'>
-    <h1 id='logHeader'>LOG</h1>
-    <div id="log">
-    </div>
-</div>
+<body>
+<div id="infs"></div>
 
 <!--!!!!!!!!!!!!!!!!!!!!INCLUDES!!!!!!!!!!!!!!!!!!!!!!!!!!!!!-->
 <link rel="stylesheet" href="../css/general.css">
@@ -52,9 +20,35 @@
 <script src="../js/libs/primitives.js"></script>
 <script src="../js/libs/klib.js"></script>
 <!--Main code-->
-<script src="../js/mainprocessor_tree.js?2"></script>
-<!--<script src="../js/mainprocessor.js?2"></script>-->
-<script src="../js/sparql.js"></script>
+<script src="../js/libs/uuid.js?112"></script>
+<script>
 
+    var arr = d3.range(10);
+    var requests = {};
+
+    var xx = d3.select("#infs").selectAll("div");
+    xx.data(arr).enter().append("div").each(function(d){
+        var thisEl = d3.select(this).append("span");
+        var waitHandler = function (str) {
+            thisEl.attr("style", "color:green").text(str);
+        }
+        var finishHandler = function (str) {
+            thisEl.attr("style", "color:blue").text(str);
+        }
+        var errorHandler = function(str){
+            thisEl.attr("style", "color:red").text(str);
+        }
+        var request = kiv.smartServerRequest({request:d+"",url: "http://localhost/test/123",
+            waitHandler: waitHandler, finishHandler: finishHandler, errorHandler:errorHandler,
+            interval:1000
+        });
+        requests[request.getGuid()] = request;
+        d3.select(this).append("button").attr("onclick",function(){
+            return "requests['"+request.getGuid()+"'].cancel();";
+        }).text("Cancel");
+    });
+
+
+</script>
 </body>
 </html>

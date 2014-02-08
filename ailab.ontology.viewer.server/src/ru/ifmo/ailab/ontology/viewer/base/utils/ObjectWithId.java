@@ -1,4 +1,4 @@
-package ru.ifmo.ailab.ontology.viewer.base.imp.rootviewer.ontoModel.utils;
+package ru.ifmo.ailab.ontology.viewer.base.utils;
 
 
 /**

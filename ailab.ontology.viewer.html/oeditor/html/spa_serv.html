@@ -4,7 +4,8 @@
     <title> SPARQL JavaScript </title>
     <script src="../js/libs/d3.v3.js"></script>
     <script src="../js/libs/jquery-2.0.2.js"></script>
-    <script src="../js/libs/primitives.js"></script>
+    <script src="../js/libs/primitives.js?1"></script>
+    <script src="../js/libs/uuid.js?112"></script>
     <script>
 
     </script>
@@ -16,8 +17,9 @@
 </div>
 
 <div id="input">
+    <!--<input id='endP' size="100" value="http://77.234.221.102:8888/sparql"/>-->
     <input id='endP' size="100" value="http://dbpedia.org/sparql"/>
-    <input id='defaultgraph' size="100" value="http://dbpedia.org"/>
+    <input id='defaultgraph' size="100" value=""/>
     <textarea id='inputTA' cols="200" rows="20"></textarea>
     <button onclick="processRequest()">PRESS ME TO REVEAL YOUR FUTURE</button>
 </div>
@@ -60,7 +62,8 @@
                     return objToArrayValues(d);
                 }).enter() //
                         .append("td").text(function (d, i) {
-                            return d.value;
+                            if(d['xml:lang']) return d.value+"@"+ d['xml:lang'];
+                            else return d.value;
                         }) //
                 ;
     }

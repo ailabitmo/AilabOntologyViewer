@@ -12,7 +12,7 @@ import ru.ifmo.ailab.ontology.viewer.base.interfaces.IResponseModel;
  *
  * %%% Модель ответа для просмотровщика
  */
-public class ViewerResponseModel implements IResponseModel<ViewerResponseModel> {
+public class ViewerResponseModel implements IResponseModel<ViewerResponseModel,UtilStructures> {
 
     UtilStructures toRet;
 
@@ -32,7 +32,7 @@ public class ViewerResponseModel implements IResponseModel<ViewerResponseModel> 
         return "Модель в JSON, которая требуется редактору для построения картинки";
     }
 
-    public ViewerResponseModel init(Object a) {
+    public ViewerResponseModel init(UtilStructures a) {
         this.toRet = (UtilStructures) a;
         return this;
     }
