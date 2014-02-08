@@ -27,14 +27,14 @@ kiv.graphStuff.graph = function (outer, linesFirst) {
         },
         linkUpdater = function (link) {
             link.select('path').attr("d", function (d, i) {
-                return 'M' + d.source.x + ',' + d.source.y + 'L' + d.target.x + ',' + d.target.y
+                return 'M' + d.source.x + ',' + d.source.y + 'L' + d.target.x + ',' + d.target.y;
             });
         },
         linkRemover = function (link) {
             link.remove() ;
         },
         nodeCreator = function (node) {
-            node.append('circle').attr("r", 5)
+            node.append('circle').attr("r", 5);
         },
         nodeUpdater = function (node) {
             node.attr('transform', function (d, i) {
@@ -42,7 +42,7 @@ kiv.graphStuff.graph = function (outer, linesFirst) {
             });
         },
         nodeRemover = function (node) {
-            node.remove()
+            node.remove() ;
         },
     //Это контейнер с линками. Линки задаются пафами
         linksOnSVG = false,
@@ -68,7 +68,7 @@ kiv.graphStuff.graph = function (outer, linesFirst) {
             spliceNodes(node);
         },
         updatePositions = function (updateInfo) {
-            defaultTick(updateInfo)
+            defaultTick(updateInfo);
         }
         ;
 
@@ -91,7 +91,7 @@ kiv.graphStuff.graph = function (outer, linesFirst) {
         else linksOnSVG = linksOnSVG.data(links, keyFuncLinks);
         if (!linksOnSVG.enter().empty()) linkCreator(linksOnSVG.enter().append("g"));
         linksOnSVG.each(function (d) {
-            linkUpdater(d3.select(this))
+            linkUpdater(d3.select(this));
         });
         linkRemover(linksOnSVG.exit());
 
@@ -100,7 +100,7 @@ kiv.graphStuff.graph = function (outer, linesFirst) {
         var entered = nodesOnSVG.enter();
         if (!entered.empty()) nodeCreator(nodesOnSVG.enter().append("g"));
         nodesOnSVG.each(function (d) {
-            nodeUpdater(d3.select(this))
+            nodeUpdater(d3.select(this)) ;
         });
         nodeRemover(nodesOnSVG.exit());
 
@@ -327,7 +327,7 @@ kiv.zoomingArea = function (width, height, baseElementForOuter, borderfill, scal
                 zoom.translate(trans(yyy));
                 zoom.scale(scale(yyy));
                 rescale();
-            }
+            };
         });
     };
 
@@ -823,7 +823,7 @@ kiv.colorHelper = function(params){
         colorMap : d3.map(), //hashmap of class sequences to values
         lastIndex : 0, // num of elements in colorMap
         param_maxValue : 360 // значение генерится от 0 до param_maxValue
-    }
+    };
     //Selects color for some object, depending on colorState
     toRet.getSomeObjectColor = function(objId) {
         if(colorState.colorMap.has(objId)) return colorState.colorMap.get(objId);//Если есть цвет в словаре - возвращаем
@@ -835,7 +835,7 @@ kiv.colorHelper = function(params){
         else {
             var inBinary = (colorState.lastIndex).toString(2);//Переводим в бинарный вид
             var delitelj = Math.pow(2,inBinary.length)/2;//Считаем делитель, число box-ов в уровне
-            var binaryIndex = inBinary.substring(1)//Считаем в бинарном виде индекс, в соответствующем уровне бинарного дерева (просто отрезаем старший бит)
+            var binaryIndex = inBinary.substring(1);//Считаем в бинарном виде индекс, в соответствующем уровне бинарного дерева (просто отрезаем старший бит)
             var boxIndexInLevel = parseInt(binaryIndex,2);//Теперь индекс уже в десятичном виде
             var razmer = colorState.param_maxValue/delitelj;//Размер box-а в уровне
             realHue = boxIndexInLevel*razmer + razmer/2;//Применяем индекс и прибавляем еще половину размера box-a (центрируем)
@@ -843,7 +843,7 @@ kiv.colorHelper = function(params){
         var realColor = d3.hsl(Math.round(realHue), v((kiv.krand().rInt(0,100000)), 0.4, 0.8, 5), v((kiv.krand().rInt(0,100000)), 0.3, 0.6, 5)).toString();
         colorState.colorMap.set(objId, realColor);
         return realColor;
-    }
+    };
 
     // numoftimes - должно быть простое число!!! Иначе получится меньше цветов.
     function v(d, min, max, numoftimes) {
@@ -854,12 +854,9 @@ kiv.colorHelper = function(params){
     return toRet;
 };
 
-mav = {};
-mav.iconForUrl = function (parent, url, size) {
-    function endsWith(text, suffix) {
-        var index = url.lastIndexOf(suffix);
-        return index >= 0 && index == text.length - suffix.length;
 
+
+mav = {};
 /**
  * text is a URL, if any below condition is met:
  *  - starts with http:// etc
@@ -880,7 +877,7 @@ mav.matchUrl = function (text) {
     if (match)
         return {protocol: null, host: null, path: nullIfUndefined(match[1])};
     return null;
-}
+} ;
 /**
  * Creates a parent for a hyperlink content and (for some URLs) appends an icon.
  * Doesn't do anything if textOrUrl isn't a URL.
@@ -937,6 +934,7 @@ mav.wrapHyperlink = function (hyperlinkParent, textOrUrl) {
     }
     return {parent: parent, text: fileName != null ? fileName : text, icon: icon, url: url};
 };
+
 //-----------------------------------------------------------------------------------------
 //-----------------------------------------/GOOD PLOTS
 //-----------------------------------------------------------------------------------------
