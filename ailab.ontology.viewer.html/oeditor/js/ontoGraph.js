@@ -4,7 +4,7 @@
 var tooltip = kiv.tooltip("tooltip");
 kiv.graphStuff.ontologyViewerTreeNew = function (params) {
     var defaultParams = {
-        width: 1200, height: 600, nodewidth: 330, nodeDif: 100, heightPerTextLine: 1,
+        width: 1200, height: 600, nodewidth: 250, nodeDif: 25, heightPerTextLine: 1,
         heightBetweenNodesOfOneParent: 10, heightBetweenNodesOfDifferentParent: 40,
         animdur: 500, containerid: 'chart', buttonWidth: 0,buttonWidth2: 15, textInLine: 35,
         tooltiper:tooltip
@@ -140,8 +140,10 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
      .attr("stroke", 'blue')
      .attr("stroke-width", 2);*/
 
-    var zoomer = kiv.zoomingArea(w, h, zoomPart, 'white', [0.6, 2], d3.rgb(252,252,252).toString());
+    var zoomer = kiv.zoomingArea(w, h, zoomPart, 'white', [0.6, 2], d3.rgb(250,250,250).toString());
     zoomer.getOuterGroup().on("dblclick.zoom", null);
+    //zoomer.translate(-nodeWidth/2, h / 2);
+
 
     svg = zoomer.getZoomingGroup();
 
@@ -186,7 +188,6 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
             var usedElements = ip.usedElements;
 
             //формируем дерево с классами.
-
             var root = (ip.currentRoot == null) ? nodemap[mainElement] : ip.currentRoot;
             var objPropNodes = {};
             //Формируем дерево
@@ -240,13 +241,15 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
                 },
                 function (d) {
                     return function (k) {
-                        ontologyViewerTree.render({idOfInstance: k.id,  mainRoot: ip.mainRoot, currentRoot: k, usedElements: ip.usedElements, sparqlEndpoint: ip.sparqlEndpoint, service: ip.service});
+                        ontologyViewerTree.render({idOfInstance: k.id, requestString: getRequestToInstance(k.id), mainRoot: ip.mainRoot, currentRoot: k, usedElements: ip.usedElements, sparqlEndpoint: ip.sparqlEndpoint, service: ip.service});
                     }
                 }
             );
+
             zoomer.translate(-root.y+nodeWidth/2, -root.x+h/2);
         },function(d){
             indi.error();
+            return;
         });
 
         function formNodeMap(objects, idroot, objProperties) {
@@ -318,14 +321,12 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
         imbaelement.text('');
         var forLinks = formD3ChainCalls(svgParent, "g#linkers|id'linkers");
         //forLinks.attr('transform', 'translate(' + nodeWidth + ',' + 0 + ')');
-
         var link = forLinks.selectAll(".link")
             .data(links, function (d) {
                 return d.source.name + (containsInObj(d.source, 'cloned') ? d.source.cloned : "") + "_" + d.target.name + (containsInObj(d.target, 'cloned') ? d.target.cloned : "");
             });
-        var le = link.enter();
-
-        var linkEnter = le.append("path")
+        var linkEnter = link
+            .enter().append("path")
             .attr("class", "link")
             .attr('stroke', function (d) {
                 if(d.source.label) return d.source.headcolor;
@@ -333,18 +334,6 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
             });
 
         var linkUpdate = link;
-        /** Svg path cheat sheet
-         M = moveto
-         L = lineto
-         H = horizontal lineto
-         V = vertical lineto
-         C = curveto
-         S = smooth curveto
-         Q = quadratic Bézier curve
-         T = smooth quadratic Bézier curveto
-         A = elliptical Arc
-         Z = closepath
-         */
         linkUpdate
             .attr("d", function (d) {
                 var m = (d.source.y + d.target.y) / 2;
@@ -363,7 +352,6 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
                 if (!containsInObj(d.source, "classes")) {
                     prefix += d.source.y + "," + d.source.x + " L" + (d.source.y + (nodeWidth-nodeDif) / 2 - buttonWidth) + "," + d.source.x + " M";
                 }
-
                 if (!containsInObj(d.target, "classes")) {
                     suffix += " L" + d.target.y + "," + d.target.x;
                 }
@@ -384,38 +372,7 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
                 toRet = toRet.trim();
 
                 return prefix + toRet + suffix;
-            })
-        ;
-        /*var circles = forLinks.selectAll(".circles")
-            .data(links, function (d) {
-                return d.source.name + (containsInObj(d.source, 'cloned') ? d.source.cloned : "") + "_" + d.target.name + (containsInObj(d.target, 'cloned') ? d.target.cloned : "");
             });
-        var enterCircles = circles.enter().append("g").attr("class","circles").each(
-            function(d){
-                if(!d.source.classes){
-                    var circle = addCircle(d3.select(this),0,0,10).attr('fill',"white").attr('stroke', d.source.parent.headcolor);
-                    circle.on('mousedown.rt', function(dd){
-                        var cur = d.source;
-                        if (!('_children' in cur))cur._children = false;
-                        if (cur._children) {
-                            cur.children = cur._children;
-                            cur._children = false;
-                        } else {
-                            cur._children = cur.children;
-                            cur.children = false;
-                        }
-                        paintAll(svg, root, leftActionGenerator, centerActionGenerator, rightActionForLeafs);
-                    });
-                }
-            }
-        );
-        circles.attr("transform",function(d){
-            if(!d.source.classes){
-                var x = d.source.x, y= d.source.y + (nodeWidth-nodeDif) / 2 +buttonWidth;
-                return "translate("+y+","+x+")";
-            }
-        });*/
-
         //return "M" + p[0] + "C" + p[1] + " " + p[2] + " " + p[3];
         //M0,0C150,0 150,-146.25 300,-146.25
 
@@ -438,7 +395,7 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
             .attr("class", "node")
             .attr('transform', function (d) {
                 if (typeof d === 'object' && 'parent' in d) return "translate(" + d.parent.y + "," + d.parent.x + ")";
-                else return "translate(0,0)";
+                else return "translate(0,0)"
             })
             .style('opacity', 0);
 
@@ -613,7 +570,7 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
 
                 a.render(d3.select(this), -(nodeWidth - nodeDif) / 2, -a.height(nodeWidth - nodeDif) / 2, nodeWidth - nodeDif);
                 if (containsInObj(d, 'classes'))
-                    a.setAction("mousedown.open", function () {
+                    a.setAction("click.open", function () {
                         centerActionGenerator(imbaelement, d)();
                         paintAll(svg, root, leftActionGenerator, centerActionGenerator, rightActionForLeafs);
                     });
