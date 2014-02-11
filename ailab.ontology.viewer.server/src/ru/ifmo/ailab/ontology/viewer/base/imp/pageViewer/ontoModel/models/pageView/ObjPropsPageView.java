@@ -9,6 +9,7 @@ import ru.ifmo.ailab.ontology.viewer.base.imp.pageViewer.ontoModel.models.PartSe
 import ru.ifmo.ailab.ontology.viewer.base.imp.pageViewer.ontoModel.models.objprops.ParticularObjectProperty;
 import ru.ifmo.ailab.ontology.viewer.base.imp.pageViewer.ontoModel.models.ontoObj.SimpleOntoObject;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -18,7 +19,7 @@ import java.util.List;
  * : 16:06
  */
 public class ObjPropsPageView extends PageView {
-    List<ParticularObjectProperty> objProps;
+    List<ParticularObjectProperty> objProps = new ArrayList<ParticularObjectProperty>();
 
     public List<ParticularObjectProperty> getObjProps() {
         return objProps;

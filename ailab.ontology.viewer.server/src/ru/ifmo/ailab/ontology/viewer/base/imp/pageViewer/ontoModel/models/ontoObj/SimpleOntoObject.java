@@ -10,6 +10,7 @@ import ru.ifmo.ailab.ontology.viewer.base.imp.pageViewer.ontoModel.models.Partia
 import ru.ifmo.ailab.ontology.viewer.base.imp.pageViewer.ontoModel.models.classInfo.SimpleClassInfo;
 import ru.ifmo.ailab.ontology.viewer.base.utils.JSON;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -19,7 +20,8 @@ import java.util.Set;
  * : 16:00
  */
 public class SimpleOntoObject extends PartialOntoItem {
-    Set<SimpleClassInfo> objClasses;
+    boolean error = false;
+    Set<SimpleClassInfo> objClasses = new HashSet<SimpleClassInfo>();
 
     public SimpleOntoObject(String id) {
         super(id);
@@ -37,7 +39,8 @@ public class SimpleOntoObject extends PartialOntoItem {
     public JsonValue serializeInJSON(IResponseCache cache) {
         JsonObject toRet = new JsonObject();
         toRet.put("id", JSON.safeString(getId()));
-        toRet.put("label",JSON.safeString(getLabel()));
+        toRet.put("label", JSON.safeString(getLabel()));
+        toRet.put("error", (error)?1:0);
         JsonArray classes = JSON.safeArray("class", toRet);
         for (SimpleClassInfo objClass : objClasses) {
             cache.add(objClass);
@@ -48,6 +51,14 @@ public class SimpleOntoObject extends PartialOntoItem {
 
     public Set<SimpleClassInfo> getObjClasses() {
         return objClasses;
+    }
+
+    public boolean isError() {
+        return error;
+    }
+
+    public void setError(boolean error) {
+        this.error = error;
     }
 
     public void setObjClasses(Set<SimpleClassInfo> objClasses) {

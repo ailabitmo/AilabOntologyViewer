@@ -65,9 +65,10 @@ public class SimpleOntoObjectBuilder extends AStartSequenceModelBuilder<SimpleOn
     protected SimpleOntoObject createOntoItemFromSPARQL(Object id, PagedViewerRequestAndContextModel context) {
         QueryEngineHTTP engine = null;
         String query = null;
+        SimpleOntoObject toRet = null;
         try {
             context.waitMessage("Querying SPARQL...");
-            SimpleOntoObject toRet = new SimpleOntoObject(id.toString());
+            toRet = new SimpleOntoObject(id.toString());
             //1. Label and class (with class label) are selected
             LanguageRequestHelper labelHelper = new LanguageRequestHelper(
                     new LanguageRequest("<"+id+">","rdfs:label","?labelPrefered", TripletPart.OBJECT,context.getPreferedLanguages())
@@ -106,11 +107,15 @@ public class SimpleOntoObjectBuilder extends AStartSequenceModelBuilder<SimpleOn
 
         }catch (Exception e){
             logger.error("Exception",e);
+            if(id!=null && id.toString()!=null){//In this case id is bad for sparql, we will show it
+                toRet = new SimpleOntoObject(id.toString());
+                toRet.setError(true);
+            }
         }
         finally {
             engine.close();
         }
-        return null;
+        return toRet;
     }
 
     @Override

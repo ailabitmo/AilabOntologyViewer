@@ -24,8 +24,6 @@ import java.util.ArrayList;
 public class DPOntoObjectBuilder extends ANotStartSequenceModelBuilder<DPOntoObject> {
 
 
-
-
     @Override
     protected void fillOntoItemFromSparql(DPOntoObject toRet, PagedViewerRequestAndContextModel requestInfo) {
             /*
@@ -62,54 +60,52 @@ public class DPOntoObjectBuilder extends ANotStartSequenceModelBuilder<DPOntoObj
             } order by ?dpLabel
 
              */
-        try{
+
+        QueryEngineHTTP engine = null;
+        ResultSet rs = null;
+        String query = null;
+        try {
             String id = toRet.getId();
-            QueryEngineHTTP engine = null;
-            ResultSet rs = null;
-            String query = null;
-            try {
-                LanguageRequestHelper dataPropertyAndLabelValue = new LanguageRequestHelper(
-                        new LanguageRequest("<" + id + ">","?dataProperty","?dpropertyValue", TripletPart.OBJECT,requestInfo.getPreferedLanguages()),
-                        new LanguageRequest("?dataProperty","rdfs:label","?dpLabel", TripletPart.OBJECT,requestInfo.getPreferedLanguages())
-                );
+            LanguageRequestHelper dataPropertyAndLabelValue = new LanguageRequestHelper(
+                    new LanguageRequest("<" + id + ">", "?dataProperty", "?dpropertyValue", TripletPart.OBJECT, requestInfo.getPreferedLanguages()),
+                    new LanguageRequest("?dataProperty", "rdfs:label", "?dpLabel", TripletPart.OBJECT, requestInfo.getPreferedLanguages())
+            );
 
-                //1. Selecting dataprperties from object
-                query = DEFAULT_PREFIX +
-                        "select distinct ?dataProperty ?dpropertyValue ?dpLabel where { " +
+            //1. Selecting dataprperties from object
+            query = DEFAULT_PREFIX +
+                    "select distinct ?dataProperty ?dpropertyValue ?dpLabel where { " +
 
-                        "   <" + id + "> ?dataProperty _:aa. " +
-                        "MINUS {?dataProperty a owl:ObjectProperty.}"+
-                        //"   ?dataProperty a owl:DatatypeProperty." +
-                        dataPropertyAndLabelValue.getLanguageSelectorRequestPart()+
-                        "} order by ?dpLabel";
+                    "   <" + id + "> ?dataProperty _:aa. " +
+                    "MINUS {?dataProperty a owl:ObjectProperty.}" +
+                    //"   ?dataProperty a owl:DatatypeProperty." +
+                    dataPropertyAndLabelValue.getLanguageSelectorRequestPart() +
+                    "} order by ?dpLabel";
 
 
-                engine = requestInfo.getQueryEngine(query);
-                rs = engine.execSelect();
-                toRet.setDataProps(new ArrayList<DataPropertyValue>());
-                while (rs.hasNext()) {
-                    MyQuerySolution qs = new MyQuerySolution(rs.next());
-                    String dpUri = qs.getStringValue("dataProperty");
-                    String value = qs.getStringValue("dpropertyValue");
-                    String label = qs.getStringValue("dpLabel");
+            engine = requestInfo.getQueryEngine(query);
+            rs = engine.execSelect();
+            toRet.setDataProps(new ArrayList<DataPropertyValue>());
+            while (rs.hasNext()) {
+                MyQuerySolution qs = new MyQuerySolution(rs.next());
+                String dpUri = qs.getStringValue("dataProperty");
+                String value = qs.getStringValue("dpropertyValue");
+                String label = qs.getStringValue("dpLabel");
 
-                    SimpleDataPropertyInfo sdpI = new SimpleDataPropertyInfo(dpUri);
-                    if(label!=null) sdpI.setLabel(label);
-                    sdpI = (SimpleDataPropertyInfo) AModelBuilder.setModelIfNeeded(SimpleDataPropertyInfo.class, sdpI);
-                    if(value!=null)
-                        toRet.getDataProps().add(new DataPropertyValue(sdpI, value));
-                    else
-                        toRet.getDataProps().add(new DataPropertyValue(sdpI, "?"));
-                }
-            }catch (Exception e){
-                logger.error(e);
-            }
-            finally {
-                engine.close();
+                SimpleDataPropertyInfo sdpI = new SimpleDataPropertyInfo(dpUri);
+                if (label != null) sdpI.setLabel(label);
+                sdpI = (SimpleDataPropertyInfo) AModelBuilder.setModelIfNeeded(SimpleDataPropertyInfo.class, sdpI);
+                if (value != null)
+                    toRet.getDataProps().add(new DataPropertyValue(sdpI, value));
+                else
+                    toRet.getDataProps().add(new DataPropertyValue(sdpI, "?"));
             }
         } catch (Exception e) {
             logger.error(e);
+            toRet.setError(true);
+        } finally {
+            if(engine!=null) engine.close();
         }
+
     }
 
     @Override

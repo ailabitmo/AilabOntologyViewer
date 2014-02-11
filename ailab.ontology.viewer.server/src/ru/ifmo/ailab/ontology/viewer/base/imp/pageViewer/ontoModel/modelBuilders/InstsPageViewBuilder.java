@@ -37,21 +37,21 @@ public class InstsPageViewBuilder extends AStartSequenceModelBuilder<InstsPageVi
 
             InstsPageView toRet = new InstsPageView(req);
             toRet.setNumOfPages(pageNumber);
-            List<SimpleOntoObject> objProps = new ArrayList<SimpleOntoObject>();
-            toRet.setSimpleOO(objProps);
+            List<SimpleOntoObject> insts = new ArrayList<SimpleOntoObject>();
+            toRet.setSimpleOO(insts);
 
             LanguageRequestHelper labelHelper = new LanguageRequestHelper(
                     new LanguageRequest("?item", "rdfs:label", "?labelPrefered", TripletPart.OBJECT, context.getPreferedLanguages())
             );
 
             if (req.getDirection() == Direction.IN || req.getDirection() == Direction.BOTH)//Both is bad here, should be on of IN and OUT
-                query = "select ?item ?labelPrefered where {" +
+                query = "select distinct ?item ?labelPrefered where {" +
                         "?item <" + req.getObjPropId() + "> <" + req.getIdOfInstance() + ">" +
                         labelHelper.getLanguageSelectorRequestPart() +
                         "} order by ?labelPrefered limit " + req.getPageProps().getCurrentLimit() + " offset " + req.getPageProps().getCurrentOffset();
 
             else if (req.getDirection() == Direction.OUT)
-                query = "select ?item ?labelPrefered where {" +
+                query = "select distinct ?item ?labelPrefered where {" +
                         "<" + req.getIdOfInstance() + "> <" + req.getObjPropId() + "> ?item." +
                         labelHelper.getLanguageSelectorRequestPart() +
                         "} order by ?labelPrefered limit " + req.getPageProps().getCurrentLimit() + " offset " + req.getPageProps().getCurrentOffset();
@@ -64,7 +64,7 @@ public class InstsPageViewBuilder extends AStartSequenceModelBuilder<InstsPageVi
                 MyQuerySolution qs = new MyQuerySolution(rs.next());
                 String idInst = qs.getStringValue("item");
                 context.waitMessage("Selecting instance " + i++ + "...");
-                objProps.add((SimpleOntoObject) AModelBuilder.buildModel(SimpleOntoObject.class, context, idInst));
+                insts.add((SimpleOntoObject) AModelBuilder.buildModel(SimpleOntoObject.class, context, idInst));
             }
 
             context.waitMessage("Preparing data...");

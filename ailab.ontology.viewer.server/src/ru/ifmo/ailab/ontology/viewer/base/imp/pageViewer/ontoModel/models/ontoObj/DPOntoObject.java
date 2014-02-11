@@ -6,6 +6,7 @@ import org.apache.jena.atlas.json.JsonValue;
 import ru.ifmo.ailab.ontology.viewer.base.imp.pageViewer.IResponseCache;
 import ru.ifmo.ailab.ontology.viewer.base.imp.pageViewer.ontoModel.models.dataprops.DataPropertyValue;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -15,7 +16,7 @@ import java.util.List;
  * : 16:01
  */
 public class DPOntoObject extends SimpleOntoObject {
-    List<DataPropertyValue> dataProps = null;
+    List<DataPropertyValue> dataProps = new ArrayList<DataPropertyValue>();
     public DPOntoObject(String id) {
         super(id);
     }

@@ -206,33 +206,35 @@ ailab.kiv.pageViewer = function(p){
                 var halfWidth = (p.nodeWidth-p.nodeDif) / 2;
                 //If it's not root - we create left ear
                 var leftEar=null;
-                if (d.parent){
+                var rightEar=null;
+                if (d.parent && !d.error){
                     leftEar = createEar(d, d3This,-halfWidth - p.buttonWidth,
                         -(leftRightHeight / 2) + 1, halfWidth , leftRightHeight,
                         uiElement, leftAction(d), "M5,-5L-5,0L5,5",-halfWidth-(p.buttonWidth)/2);
                 }
                 //right ear
-                var rightEar = createEar(d, d3This, 0 , -(leftRightHeight / 2) + 1, halfWidth + p.buttonWidth ,
-                    leftRightHeight, uiElement, function(){
-                        if(d['children'] || d['_children'] ){ //If children exist - swaping children
-                            if (!('_children' in d))d._children = false;
-                            if (d._children) {d.children = d._children;d._children = false;}
-                            else {d._children = d.children;d.children = false;}
-                            paintAll();
-                        } else rightActionForInstance(d); // else trying to execute right action
-                    } ,
-                    (d.children)?"M5,-5L-5,0L5,5":"M-5,-5L-5,5L5,0", (d.children)?(halfWidth+(p.buttonWidth-4)/2):(halfWidth+(p.buttonWidth)/2));
-
+                if(!d.error){
+                    rightEar = createEar(d, d3This, 0 , -(leftRightHeight / 2) + 1, halfWidth + p.buttonWidth ,
+                        leftRightHeight, uiElement, function(){
+                            if(d['children'] || d['_children'] ){ //If children exist - swaping children
+                                if (!('_children' in d))d._children = false;
+                                if (d._children) {d.children = d._children;d._children = false;}
+                                else {d._children = d.children;d.children = false;}
+                                paintAll();
+                            } else rightActionForInstance(d); // else trying to execute right action
+                        } ,
+                        (d.children)?"M5,-5L-5,0L5,5":"M-5,-5L-5,5L5,0", (d.children)?(halfWidth+(p.buttonWidth-4)/2):(halfWidth+(p.buttonWidth)/2));
+                }
                 //render main element after ears
                 uiElement.render(d3This, -halfWidth, -leftRightHeight / 2, p.nodeWidth-p.nodeDif);
-                if (d.type == elementTypes.instance) uiElement.setAction("mousedown.open", centerAction(d));
+                if (!d.error) uiElement.setAction("mousedown.open", centerAction(d));
                 uiElement.setAction("mouseover.uwi", onMouseElement(1));
                 uiElement.setAction("mouseout.uwi", onMouseElement(0));
 
                 //Changing opacity to 0 or 1
                 function onMouseElement(opacity){
                     return function () {
-                        rightEar.transition().duration(p.animdur).attr("opacity", opacity);
+                        if(rightEar!=null) rightEar.transition().duration(p.animdur).attr("opacity", opacity);
                         if (leftEar != null) leftEar.transition().duration(p.animdur).attr("opacity", opacity);
                     };
                 }
@@ -622,6 +624,7 @@ instance type = {
     uniqueId,        globally unique id of element to identify it
     id,              id of instance
     color,           color of instance
+    error,           some error occured during forming instance. We do not show ears on error'd nodes
     name,            name of instance (label or substring of id)
     expanded,        if true - data properties are visible, else data props are hidden
     class[],         Class id's of instance
