@@ -68,7 +68,7 @@ ailab.kiv.pageViewer = function(p){
         resetState();
         var defaultParams = {
             containerid: 'chart', idOfInstance: null, sparqlEndpoint: "", service: "",
-            pageLimitForObjectProperties:10, pageLimitForInstances:5, interval:500/*ms*/
+            pageLimitForObjectProperties:85, pageLimitForInstances:5, interval:500/*ms*/
         };
         renderParams = (arguments.length == 1) ? mergeProperties(renderParamz, defaultParams) : defaultParams;
 
@@ -524,9 +524,9 @@ ailab.kiv.pageViewer = function(p){
                 try {
                     var result = (eval('(' + d + ')'));
                     updateCachedData(result);
-                    instance.children = [fillPaginatorModel(pageNum,currentLimit,"???")];
+                    instance.children = [fillPaginatorModel(pageNum,currentLimit,result.request.pageNum)];
 
-                    each(result.request, function(d){
+                    each(result.request.values, function(d){
                         instance.children.push(fillModelForObjectProperty(d,instance.color));
                     });
                     paintAll();
@@ -555,8 +555,8 @@ ailab.kiv.pageViewer = function(p){
                 try {
                     var result = (eval('(' + d + ')'));
                     updateCachedData(result);
-                    objProperty.children = [fillPaginatorModel(pageNum,currentLimit,"???")];
-                    each(result.request, function(d){
+                    objProperty.children = [fillPaginatorModel(pageNum,currentLimit,result.request.pageNum)];
+                    each(result.request.values, function(d){
                         objProperty.children.push(fillModelForInstance(d,false));
                     });
                     paintAll();
@@ -607,7 +607,7 @@ ailab.kiv.pageViewer = function(p){
 };
 
 function startIt(containerid,sefvice,endpoint, idOfInstance){
-    var pageViewer = ailab.kiv.pageViewer();
+    var pageViewer = ailab.kiv.pageViewer({width:$(window).width()-20,height:$(window).height()-20});
     pageViewer.RENDER({
         containerid: containerid,
         idOfInstance: idOfInstance,
@@ -657,8 +657,5 @@ paginator type = {
     limit,                current limit
     ui
 }
-
-
-
 */
 //////////////////////////////////////////////////////////////////////////////

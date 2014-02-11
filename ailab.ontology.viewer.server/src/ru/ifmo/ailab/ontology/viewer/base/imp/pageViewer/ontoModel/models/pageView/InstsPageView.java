@@ -1,6 +1,7 @@
 package ru.ifmo.ailab.ontology.viewer.base.imp.pageViewer.ontoModel.models.pageView;
 
 import org.apache.jena.atlas.json.JsonArray;
+import org.apache.jena.atlas.json.JsonObject;
 import org.apache.jena.atlas.json.JsonValue;
 import ru.ifmo.ailab.ontology.viewer.base.imp.pageViewer.IResponseCache;
 import ru.ifmo.ailab.ontology.viewer.base.imp.pageViewer.ontoModel.models.PartSeq;
@@ -39,8 +40,11 @@ public class InstsPageView extends PageView {
 
     @Override
     public JsonValue serializeInJSON(IResponseCache cache) {
+        JsonObject obj = new JsonObject();
         JsonArray toRet = new JsonArray();
+        obj.put("pageNum", numOfPages);
+        obj.put("values",toRet);
         for (SimpleOntoObject soo : simpleOO) toRet.add(soo.serializeInJSON(cache));
-        return toRet;
+        return obj;
     }
 }

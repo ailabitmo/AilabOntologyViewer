@@ -5,8 +5,8 @@ import ru.ifmo.ailab.ontology.viewer.base.imp.pageViewer.ontoModel.models.JSONSe
 import ru.ifmo.ailab.ontology.viewer.base.imp.pageViewer.requests.ARequest;
 import ru.ifmo.ailab.ontology.viewer.base.imp.pageViewer.requests.AResponse;
 import ru.ifmo.ailab.ontology.viewer.base.interfaces.IProcessor;
-import ru.ifmo.ailab.ontology.viewer.base.utils.smartrequest.SmartRequest;
-import ru.ifmo.ailab.ontology.viewer.base.utils.smartrequest.SmartRequestPool;
+import ru.spb.kpit.kivan.Networking.smartrequest.SmartRequest;
+import ru.spb.kpit.kivan.Networking.smartrequest.SmartRequestPool;
 
 /**
  * IDEA

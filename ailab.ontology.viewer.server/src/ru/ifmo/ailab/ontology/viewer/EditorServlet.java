@@ -16,8 +16,8 @@ import ru.ifmo.ailab.ontology.viewer.base.interfaces.IProcessor;
 import ru.ifmo.ailab.ontology.viewer.base.interfaces.IRequestAndContextModel;
 import ru.ifmo.ailab.ontology.viewer.base.interfaces.IResponseModel;
 import ru.ifmo.ailab.ontology.viewer.base.utils.LoggerWrapper;
-import ru.ifmo.ailab.ontology.viewer.base.utils.smartrequest.SmartRequest;
 import ru.spb.kpit.kivan.General.Strings.StringUtils;
+import ru.spb.kpit.kivan.Networking.smartrequest.SmartRequest;
 import ru.spb.kpit.kivan.Randomizer.Triad;
 
 import javax.servlet.ServletException;

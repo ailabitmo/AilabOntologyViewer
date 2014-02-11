@@ -2,8 +2,8 @@ package ru.ifmo.ailab.ontology.viewer.base.imp.pageViewer;
 
 import com.hp.hpl.jena.sparql.engine.http.QueryEngineHTTP;
 import ru.ifmo.ailab.ontology.viewer.base.utils.LoggerWrapper;
-import ru.ifmo.ailab.ontology.viewer.base.utils.smartrequest.InfoMessagingProvider;
 import ru.ifmo.ailab.ontology.viewer.base.interfaces.ARequestAndContextWithEndpoint;
+import ru.spb.kpit.kivan.Networking.smartrequest.InfoMessagingProvider;
 
 /**
  * IDEA
