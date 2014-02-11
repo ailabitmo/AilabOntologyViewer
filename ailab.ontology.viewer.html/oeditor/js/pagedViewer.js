@@ -277,9 +277,9 @@ ailab.kiv.pageViewer = function(p){
             enter.append("path").attr("class", "link").attr('stroke', function (d) {
                     if(d.source.type == elementTypes.instance) return d.source.color;
                     else if(d.source.type == elementTypes.objProperty) return d.source.parent.color;
-            });
+            }).style('opacity',0);
 
-            update.attr("d", function (d) {
+            update.transition().duration(p.animdur).attr("d", function (d) {
                 /// !!!!! X and Y are inverted here!!!!!
                     if(d.source.type == elementTypes.paginator || d.target.type == elementTypes.paginator ) return "M"+ d.target.y+","+ d.target.x;
                     var m = (d.source.y + d.target.y) / 2;
@@ -305,7 +305,7 @@ ailab.kiv.pageViewer = function(p){
                     });
 
                     return prefix + toRet.trim() + suffix;
-                });
+                }).style('opacity',1);
 
             exit.transition().duration(p.animdur).attr("d", function (d) {
                     var o = {x: d.target.x, y: d.target.y};
