@@ -201,7 +201,7 @@ function addRectWithText(dataElement, width, vertMargin, horMargin, fill, fillOu
         sum += vertMargin + nameParam.height + vertMargin - nameParam.baseLineHeight;
         sum += textParams.length * (textParam.height + vertMargin - 1 * textParam.baseLineHeight);
         return sum;
-    }
+    };
 
     /**
      * Нарисовать
@@ -495,13 +495,13 @@ function addLogEntry(nameOfParameter, infoText) {
     var tempArr = objToArrayValues(__log);
 
     var selection = d3.select("#log").selectAll("p").data(tempArr, function (d) {
-        return d.nameOfParameter
+        return d.nameOfParameter;
     });
     selection.enter().append("p").attr("id",function (d) {
         return d.nameOfParameter;
     }).attr('class', "logentry");
     selection.text(function (d) {
-        return d.nameOfParameter + ":" + d.infoText
+        return d.nameOfParameter + ":" + d.infoText;
     });
     selection.exit().remove();
 }
@@ -511,13 +511,13 @@ function addLogEntryHtml(nameOfParameter, htmlText) {
     var tempArr = objToArrayValues(__log);
 
     var selection = d3.select("#log").selectAll("p").data(tempArr, function (d) {
-        return d.nameOfParameter
+        return d.nameOfParameter;
     });
     selection.enter().append("p").attr("id",function (d) {
         return d.nameOfParameter;
     }).attr('class', "logentry");
     selection.html(function (d) {
-        return d.nameOfParameter + ":" + d.infoText
+        return d.nameOfParameter + ":" + d.infoText;
     });
     selection.exit().remove();
 }
@@ -535,7 +535,7 @@ function delLogEntry(nameOfParameter) {
     delete __log["" + nameOfParameter];
     var tempArr = objToArrayValues(__log);
     d3.select("#log").selectAll("p.logentry").data(tempArr,function (d) {
-        return d.nameOfParameter
+        return d.nameOfParameter;
     }).exit().remove();
 }
 /**
@@ -576,7 +576,7 @@ function sparqlJSONToObject(spJSObj, nameOfIdField) {
         newObj['o_name'] = id.substring(id.lastIndexOf('/') + 1);
         finalObjects[id] = newObj;
         return newObj;
-    }
+    };
 
     for (var i in spJSObj.results.bindings) {
         var obj = spJSObj.results.bindings[i];
@@ -617,7 +617,7 @@ function containsInObj(object, property){
 function goodIndexOf(array, value, trueFinder) {
     if (arguments.length < 3) trueFinder = function (d, i) {
         return d === i;
-    }
+    };
     for (var index in array) {
         if (trueFinder(array[index], value)) return index;
     }
@@ -639,6 +639,7 @@ function sumarray(array, start, end) {
  * @param fromObject - из этого объекта берутся недостающие свойства
  */
 function mergeProperties(toObject, fromObject) {
+    if (typeof toObject === "undefined") toObject = {};
     for (var index in fromObject) {
         if (!(index in toObject)) toObject[index] = fromObject[index];
     }
@@ -754,7 +755,7 @@ function lineRectIntersection(x1, y1, width, height, x2, y2) {
         {x1: X2, y1: Y2, x2: X3, y2: Y3},
         {x1: X4, y1: Y4, x2: X1, y2: Y1},
         {x1: X3, y1: Y3, x2: X4, y2: Y4}
-    ]
+    ];
     var otherLine = {x1: x1 + (width >> 1), y1: y1 + (height >> 1), x2: x2, y2: y2};
     for (var lineIndex in lines) {
         var line = lines[lineIndex];

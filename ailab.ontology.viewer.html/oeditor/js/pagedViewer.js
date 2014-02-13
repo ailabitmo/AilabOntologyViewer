@@ -55,7 +55,7 @@ ailab.kiv.pageViewer = function(p){
     var zoomer = null;//zoomer contains zooming viewpoint
     var renderParams = null;//When an object is rendered, render parameters are contained here
     var mainRoot = null;//ROOT of the tree
-    var usedElements = d3.map();//Elements, which were used
+    //var usedElements = d3.map();//Elements, which were used
 
     //STATE of the TREE-----
 
@@ -68,7 +68,7 @@ ailab.kiv.pageViewer = function(p){
         resetState();
         var defaultParams = {
             containerid: 'chart', idOfInstance: null, sparqlEndpoint: "", service: "",
-            pageLimitForObjectProperties:85, pageLimitForInstances:5, interval:500/*ms*/
+            pageLimitForObjectProperties:15, pageLimitForInstances:10, interval:500/*ms*/
         };
         renderParams = (arguments.length == 1) ? mergeProperties(renderParamz, defaultParams) : defaultParams;
 
@@ -98,11 +98,12 @@ ailab.kiv.pageViewer = function(p){
 
         return dif;
 
-        //We are calcing height depending on the element type differently
+        //We are calculating height depending on the element type differently
         function calcHeight(element){
             if(element.type == elementTypes.instance ) return ( element.expanded)?  element.uiExpanded.height(p.nodeWidth-p.nodeDif) : element.ui.height(p.nodeWidth-p.nodeDif);
             else if (element.type == elementTypes.objProperty) return element.ui.height(p.nodeWidth-p.nodeDif)+30;
-            else if (element.type == elementTypes.paginator) return element.ui.height(p.nodeWidth-p.nodeDif)+30;
+            //else if (element.type == elementTypes.paginator) return element.ui.height(p.nodeWidth-p.nodeDif)+30;
+            else if (element.type == elementTypes.paginator) return 35;
             else if (element.type == elementTypes.loader) return element.ui.height(p.nodeWidth-p.nodeDif)+30;
         }
     }
@@ -124,10 +125,10 @@ ailab.kiv.pageViewer = function(p){
         renderParams = null;
         mainRoot = null;
         panel = null;
-        usedElements = d3.map();
+        //usedElements = d3.map();
     }
 
-    //paint function. Should be invoked each time whne something changes in representation
+    //paint function. Should be invoked each time when something changes in representation
     function paintAll(){
         var nodes = tree.nodes(mainRoot);
         var links = tree.links(nodes);
@@ -155,8 +156,16 @@ ailab.kiv.pageViewer = function(p){
             var exit = update.exit();
 
             enter.append("g").attr("class", "node").style('opacity', 0).attr('transform', function (d) {
-                    if (typeof d === 'object' && 'parent' in d) return "translate(" + d.parent.y + "," + d.parent.x + ")";
-                    else return "translate(0,0)";});
+                    if (typeof d === 'object' && 'parent' in d) {
+                        if (!d._ui) {
+                            if (d.type == elementTypes.paginator) createPaginator(d, d3.select(this));
+                            else if (d.type == elementTypes.loader) createLoader(d, d3.select(this));
+                        } else {
+                            if (d.type == elementTypes.paginator) this.appendChild(d._ui.root.node());
+                        }
+                        return "translate(" + d.parent.y + "," + d.parent.x + ")";
+                    } else return "translate(0,0)";
+            });
 
             exit.transition().duration(p.animdur).style('opacity', 0).attr('transform', function (d) {
                     if (typeof d === 'object' && 'parent' in d) return "translate(" + d.parent.y + "," + d.parent.x + ")";
@@ -166,12 +175,31 @@ ailab.kiv.pageViewer = function(p){
                 .style('opacity', 1)
                 .each(function (d) {
                     var thisItem = d3.select(this);
-                    thisItem.text('');
-                    if(d.type == elementTypes.objProperty) paintObjProperty(d,thisItem);
-                    else if (d.type == elementTypes.instance) paintInstance(d,thisItem);
-                    else if (d.type == elementTypes.loader) paintLoader(d,thisItem);
-                    else if (d.type == elementTypes.paginator) paintPaginator(d,thisItem);
+                    if (d.type == elementTypes.paginator)   { updatePaginator(d, thisItem); }
+                    else if (d.type == elementTypes.loader) { updateLoader(d, thisItem); }
+                    else {
+                        thisItem.text('');
+                        if (d.type == elementTypes.objProperty) paintObjProperty(d,thisItem);
+                        else if (d.type == elementTypes.instance) paintInstance(d,thisItem);
+                    }
                 });
+
+            function createPaginator(d, parent) {
+                d._ui = svgui.Paginator({parent: parent, color: d.parent.color, width: 160});
+                d._ui.onPageChanged = function (page) {
+                    if (d.parent.type == elementTypes.objProperty) {
+                        requestForInstances(d.parent.parent, d.parent, page, renderParams.pageLimitForInstances);
+                    } else if (d.parent.type == elementTypes.instance) {
+                        requestForObjPropPage(d.parent, page, renderParams.pageLimitForObjectProperties);
+                    }
+                };
+            }
+
+            function createLoader(d, parent) {
+                var indicatorSize = 30;
+                var container = parent.append("g").attr("width", indicatorSize).attr("height", indicatorSize);
+                d._ui = Indicator.create(container, indicatorSize);
+            }
 
             function paintObjProperty(d,d3This){
                 var uiElement = d.ui; // ui.SimpleText({ text: d.name, textClass: "paragraphHeaderGraph", vertMargin: 5, raze: true});
@@ -242,10 +270,9 @@ ailab.kiv.pageViewer = function(p){
                 //create left or right ear
                 function createEar(d, d3This, x ,y, width, height, uiElement, action, path, translate){
                     var ear = d3This.append("g").attr("opacity",0);
-                    var rrect = addBorderedRect(ear, x , y, width, height, 2, "white", uiElement.RxRy(), uiElement.RxRy(), d.color);
-                    var lpth = ear.append("path").attr("d", path).attr("fill", d.color).attr("transform","translate("+translate+",0)");
-                    actionSet(rrect);
-                    actionSet(lpth);
+                    addBorderedRect(ear, x , y, width, height, 2, "white", uiElement.RxRy(), uiElement.RxRy(), d.color);
+                    ear.append("path").attr("d", path).attr("fill", d.color).attr("transform","translate("+translate+",0)");
+                    actionSet(ear);
                     return ear;
 
                     function actionSet(item){
@@ -261,9 +288,19 @@ ailab.kiv.pageViewer = function(p){
                 d.ui.render(d3This, -((p.nodeWidth-p.nodeDif) / 2)+5, -leftRightHeight / 2, p.nodeWidth-p.nodeDif);
             }
 
-            function paintPaginator(d,d3This){
-                var ti = textInfo("Paginator. "+d.currentPage+"/"+d.overallPages+"("+d.limit+"max)", "basicTextInGraph");
-                d.ui.render(d3This, 0 -( (ti.width/2>=(p.nodeWidth - p.nodeDif)/2)?(p.nodeWidth - p.nodeDif) / 2:((ti.width)/2)), -10, p.nodeWidth - p.nodeDif);
+            function updatePaginator(d, d3This) {
+                d._ui.currentPage = d.currentPage;
+                d._ui.pageCount = d.overallPages;
+                d._ui.update();
+                var size = svgui.measure(d._ui, vector(p.nodeWidth - p.nodeDif, Infinity));
+                svgui.arrange(d._ui, -((size.x / 2 >= (p.nodeWidth - p.nodeDif) / 2)
+                    ? (p.nodeWidth - p.nodeDif) / 2 : size.x / 2), -10);
+            }
+
+            function updateLoader(d, d3This) {
+                var height = d._ui.size;
+                d._ui.parent.attr("transform", "translate(" +
+                    (-(p.nodeWidth - p.nodeDif) / 2 + 5) + "," + (-height / 2) + ")");
             }
         }
 
@@ -449,7 +486,7 @@ ailab.kiv.pageViewer = function(p){
         else instance.uiExpanded = fillInstanceUI(instance, true, "Loading..."); //expanded version in uiExpanded, before request, it should be indicator
         instance.dpLoaded = hasDataProps;
         instance.type = elementTypes.instance;
-        usedElements.set(instance.uniqueId,instance);
+        //usedElements.set(instance.uniqueId,instance);
         return instance;
     }
 
@@ -460,7 +497,7 @@ ailab.kiv.pageViewer = function(p){
         objProperty.color = color;
         objProperty.ui = fillObjectPropertyUI(objProperty);
         objProperty.type = elementTypes.objProperty;
-        usedElements.set(objProperty.uniqueId,objProperty);
+        //usedElements.set(objProperty.uniqueId,objProperty);
         return objProperty;
     }
 
@@ -494,7 +531,7 @@ ailab.kiv.pageViewer = function(p){
         var request = kiv.smartServerRequest({
             request: renderParams.sparqlEndpoint+"$instanceGeneralInfo.InstanceGeneralInfoRequest$"+renderParams.idOfInstance,
             url: renderParams.service,
-            waitHandler: function(d){indicator.text(d, /*TODO style for wait msg*/ "wait style???");},
+            waitHandler: function(d){indicator.status(d);},
             finishHandler: function(d){
                 try {
                     var result = (eval('(' + d + ')'));
@@ -508,7 +545,7 @@ ailab.kiv.pageViewer = function(p){
                     /*indicator.error();indicator.text(e, *//*TODO style for error msg*//* "error style???");*/
                 }
             },
-            errorHandler:function(d){indicator.error();indicator.text(d, /*TODO style for error msg*/ "error style???");},
+            errorHandler:function(d){indicator.error();indicator.status(d);},
             interval:renderParams.interval
         });
         //todo there should exist ui component which would invoke request.cancel() if needed
@@ -526,8 +563,10 @@ ailab.kiv.pageViewer = function(p){
                 try {
                     var result = (eval('(' + d + ')'));
                     updateCachedData(result);
-                    instance.children = [fillPaginatorModel(pageNum,currentLimit,result.request.pageNum)];
-
+                    instance.children = [];
+                    if (result.request.pageNum > 1) {
+                        instance.children.push(fillPaginatorModel(pageNum, currentLimit, result.request.pageNum));
+                    }
                     each(result.request.values, function(d){
                         instance.children.push(fillModelForObjectProperty(d,instance.color));
                     });
@@ -557,12 +596,16 @@ ailab.kiv.pageViewer = function(p){
                 try {
                     var result = (eval('(' + d + ')'));
                     updateCachedData(result);
-                    objProperty.children = [fillPaginatorModel(pageNum,currentLimit,result.request.pageNum)];
+                    objProperty.children = [];
+                    if (result.request.pageNum > 1) {
+                        objProperty.children.push(fillPaginatorModel(pageNum, currentLimit, result.request.pageNum));
+                    }
                     each(result.request.values, function(d){
                         objProperty.children.push(fillModelForInstance(d,false));
                     });
                     paintAll();
-                    zoomer.translate(-instance.y+ p.nodeWidth/2, -instance.x+h/2);
+                    //zoomer.translate(-instance.y+ p.nodeWidth/2, -instance.x+h/2);
+                    zoomer.translate(-objProperty.y+ p.nodeWidth/2, -objProperty.x+h/2);
                 } catch (e) {
                     alert(e);
                     /*todo indicatorUi.error();indicatorUi.text(d, TODO style for error msg "error style???");*/

@@ -115,14 +115,8 @@ public abstract class AModelBuilder<OI extends PartialOntoItem> {
 
     static {
         addObjectToBuilder(SimpleOntoObject.class, SimpleOntoObjectBuilder.class);
+
         addObjectToBuilder(DPOntoObject.class, DPOntoObjectBuilder.class);
-
-        /*addObjectToBuilder(SimpleClassInfo.class, SimpleClassInfoBuilder.class);
-        addObjectToBuilder(ClassInfo.class, ClassInfoBuilder.class);
-
-        addObjectToBuilder(SimpleDataPropertyInfo.class, SimpleDataPropertyInfoBuilder.class);
-
-        addObjectToBuilder(SimpleObjectPropertyInfo.class, SimpleObjectPropertyInfoBuilder.class);*/
 
         addObjectToBuilder(ObjPropsPageView.class, ObjPropsPageViewBuilder.class);
 

@@ -132,7 +132,6 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
         .attr("width", w).attr("height", h)
         .attr("pointer-events", "all");
 
-    var indi = null;
     var zoomPart = formD3ChainCalls(svg, "g#zoom_part|id'zoom_part");
     /*var historypart = formD3ChainCalls(svg, "g#hist_part|id'hist_part");
      addRect(historypart, 30, 50, histowidth, h - 100, 5, 5)
@@ -143,7 +142,6 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
     var zoomer = kiv.zoomingArea(w, h, zoomPart, 'white', [0.6, 2], d3.rgb(250,250,250).toString());
     zoomer.getOuterGroup().on("dblclick.zoom", null);
     //zoomer.translate(-nodeWidth/2, h / 2);
-
 
     svg = zoomer.getZoomingGroup();
 
@@ -158,7 +156,10 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
             sparqlEndpoint: "", service: ""
         };
         ip = (arguments.length == 1) ? mergeProperties(ip, defaultParams) : defaultParams;
-        indi = Indicator.create(d3.select("#svg_id"));
+//        indi = Indicator.create(d3.select("#svg_id"));
+        var indi = Indicator.create(ip.currentRoot == null ? d3.select("#svg_id") : d3.select(ip.currentRoot.renderedNode));
+
+        setTimeout(function() {
         queryService(ip.sparqlEndpoint + "$" + ip.idOfInstance, ip.service, function (d) {
             try {
                 var allData = eval('(' + d + ')');
@@ -233,16 +234,16 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
             paintAll(svg, ip.mainRoot, function () {
                     return function (j) {
                         window.location.assign("/resource/?uri=" + encodeURIComponent(j.id).replace(/'/g,"%27").replace(/"/g,"%22"));
-                    }
+                    };
                 }, function (a, bbb) {
                     return function (j) {
                         bbb.expanded = !bbb.expanded;
-                    }
+                    };
                 },
                 function (d) {
                     return function (k) {
                         ontologyViewerTree.render({idOfInstance: k.id, requestString: getRequestToInstance(k.id), mainRoot: ip.mainRoot, currentRoot: k, usedElements: ip.usedElements, sparqlEndpoint: ip.sparqlEndpoint, service: ip.service});
-                    }
+                    };
                 }
             );
 
@@ -251,6 +252,7 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
             indi.error();
             return;
         });
+        }, ip.currentRoot == null ? 0 : 50000);
 
         function formNodeMap(objects, idroot, objProperties) {
             var nodemap = {};
@@ -357,7 +359,7 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
                 }
 
                 p = p.map(function (d) {
-                    return [ d.y, d.x ]
+                    return [ d.y, d.x ];
                 });
 
                 each(p, function (d) {
@@ -395,7 +397,7 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
             .attr("class", "node")
             .attr('transform', function (d) {
                 if (typeof d === 'object' && 'parent' in d) return "translate(" + d.parent.y + "," + d.parent.x + ")";
-                else return "translate(0,0)"
+                else return "translate(0,0)";
             })
             .style('opacity', 0);
 
@@ -406,6 +408,7 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
             })
             .style('opacity', 1)
             .each(function (d) {
+                d.renderedNode = this;
                 d3.select(this).text('');
 
                 if (!containsInObj(d, "classes")) {
@@ -500,73 +503,57 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
                 }
 
                 var leftRightheight = d['_$_uirect_$_'][0].height(nodeWidth - nodeDif);
-                var left=null;
+                var left = null;
                 if (d.parent) {
                     left = d3.select(this).append("g").attr("opacity",0);
                     var rrect = addBorderedRect(left, -(nodeWidth - nodeDif) / 2 -buttonWidth2 , -(leftRightheight / 2) + 1, (nodeWidth - nodeDif) / 2 + buttonWidth, leftRightheight, 2, "white", a.RxRy(), a.RxRy(), d.headcolor);
-                    rrect.on("mousedown.left", leftActionGenerator());
-                    rrect.on('mouseover.left', function (d, i) {
+
+                    left.on("click.left", leftActionGenerator());
+                    left.on('mouseover.left', function (d, i) {
                         left.transition().duration(animationDuration).attr("opacity",1);
                     });
-                    rrect.on('mouseout.left', function (d, i) {
+                    left.on('mouseout.left', function (d, i) {
                         left.transition().duration(animationDuration).attr("opacity",0);
                     });
 
-                    var lpth = left.append("path").attr("d", "M0,-5L-10,0L0,5").attr("fill", d.headcolor).attr("transform","translate("+(-(nodeWidth - nodeDif) / 2-(buttonWidth2-10)/2)+",0)");
-                    lpth.on("mousedown.left", leftActionGenerator());
-                    lpth.on('mouseover.left', function (d, i) {
-                        left.transition().duration(animationDuration).attr("opacity",1);
-                    });
-                    lpth.on('mouseout.left', function (d, i) {
-                        left.transition().duration(animationDuration).attr("opacity",0);
-                    });
-
+                    // small triangle
+                    left.append("path")
+                        .attr("d", "M0,-5L-10,0L0,5")
+                        .attr("fill", d.headcolor)
+                        .attr("transform", "translate("+(-(nodeWidth - nodeDif) / 2-(buttonWidth2-10)/2)+",0)");
                 }
 
                 var right = d3.select(this).append("g").attr("opacity",0);
                 var rRect = addBorderedRect(right, 0, -(leftRightheight / 2) + 1, (nodeWidth - nodeDif) / 2 + buttonWidth2, leftRightheight, 2, "white", a.RxRy(), a.RxRy(), d.headcolor);
 
-                if (('children' in d) || containsInObj(d, '_children')) rRect.on("mousedown.close", function (dd) {
-                    var cur = d;
-                    if (!('_children' in cur))cur._children = false;
-                    if (cur._children) {
-                        cur.children = cur._children;
-                        cur._children = false;
-                    } else {
-                        cur._children = cur.children;
-                        cur.children = false;
-                    }
-                    paintAll(svg, root, leftActionGenerator, centerActionGenerator, rightActionForLeafs);
-                });
-                else rRect.on("mousedown.close", rightActionForLeafs(d));
-                rRect.on('mouseover.left', function (d, i) {
+                if (('children' in d) || containsInObj(d, '_children'))
+                    right.on("click.close", function (dd) {
+                        var cur = d;
+                        if (!('_children' in cur))cur._children = false;
+                        if (cur._children) {
+                            cur.children = cur._children;
+                            cur._children = false;
+                        } else {
+                            cur._children = cur.children;
+                            cur.children = false;
+                        }
+                        paintAll(svg, root, leftActionGenerator, centerActionGenerator, rightActionForLeafs);
+                    });
+                else
+                    right.on("click.close", rightActionForLeafs(d));
+
+                right.on('mouseover.left', function (d, i) {
                     right.transition().duration(animationDuration ).attr("opacity", 1);
                 });
-                rRect.on('mouseout.left', function (d, i) {
+                right.on('mouseout.left', function (d, i) {
                     right.transition().duration(animationDuration ).attr("opacity", 0);
                 });
 
-                var rpth = (d.children)?right.append("path").attr("d", "M0,-5L-10,0L0,5").attr("fill", d.headcolor).attr("transform","translate("+((nodeWidth - nodeDif) / 2+(buttonWidth2+8)/2)+",0)")
-                    :right.append("path").attr("d", "M0,-5L10,0L0,5").attr("fill", d.headcolor).attr("transform","translate("+((nodeWidth - nodeDif) / 2+(buttonWidth2-10)/2)+",0)");
-                if (('children' in d) || containsInObj(d, '_children')) rpth.on("mousedown.close", function (dd) {
-                    var cur = d;
-                    if (!('_children' in cur))cur._children = false;
-                    if (cur._children) {
-                        cur.children = cur._children;
-                        cur._children = false;
-                    } else {
-                        cur._children = cur.children;
-                        cur.children = false;
-                    }
-                    paintAll(svg, root, leftActionGenerator, centerActionGenerator, rightActionForLeafs);
-                });
-                else rpth.on("mousedown.close", rightActionForLeafs(d));
-                rpth.on('mouseover.left', function (d, i) {
-                    right.transition().duration(animationDuration).attr("opacity",1);
-                });
-                rpth.on('mouseout.left', function (d, i) {
-                    right.transition().duration(animationDuration).attr("opacity",0);
-                });
+                var triangle = right.append("path").attr("fill", d.headcolor);
+                if (d.children)
+                    triangle.attr("d", "M0,-5L-10,0L0,5").attr("transform", "translate("+((nodeWidth - nodeDif) / 2+(buttonWidth2+8)/2)+",0)");
+                else
+                    triangle.attr("d", "M0,-5L10,0L0,5").attr("transform", "translate("+((nodeWidth - nodeDif) / 2+(buttonWidth2-10)/2)+",0)");
 
                 a.render(d3.select(this), -(nodeWidth - nodeDif) / 2, -a.height(nodeWidth - nodeDif) / 2, nodeWidth - nodeDif);
                 if (containsInObj(d, 'classes'))
@@ -588,7 +575,7 @@ kiv.graphStuff.ontologyViewerTreeNew = function (params) {
             .style('opacity', 0)
             .attr('transform', function (d) {
                 if (typeof d === 'object' && 'parent' in d) return "translate(" + d.parent.y + "," + d.parent.x + ")";
-                else return "translate(0,0)"
+                else return "translate(0,0)";
             })
             .remove();
     }

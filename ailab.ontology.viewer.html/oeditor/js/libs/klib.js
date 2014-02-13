@@ -558,7 +558,7 @@ kiv.UI = function (tooltiper) {
 
         SimpleText.render = function (parent, x, y, width) {
             var hyperlink = mav.wrapHyperlink(p.raze ? parent : parent.append("g"), p.text);
-            ti = textInfo(hyperlink.text);
+            ti = textInfo(hyperlink.text, p.textClass);
             var iconSize = hyperlink.icon != null ? ti.height : 0;
             if (hyperlink.icon != null) {
                 hyperlink.icon
@@ -658,7 +658,7 @@ kiv.UI = function (tooltiper) {
                         .attr("x", x + p.horIndent)
                         .attr("class",  p.valTextClass);
                     var hyperlink = mav.wrapHyperlink(g, pair.right);
-                    var tiRight = textInfo(hyperlink.text);
+                    var tiRight = textInfo(hyperlink.text, p.textClass);
                     var xForRight = x + p.horIndent + (width * p.percent_leftright) / 100 + p.indentBetweenLeftAndRight / 2;
                     var iconSize = hyperlink.icon != null ? tiRight.height : 0;
                     if (hyperlink.icon != null) {
@@ -924,7 +924,7 @@ mav.wrapHyperlink = function (hyperlinkParent, textOrUrl) {
     var parent = hyperlinkParent.append("svg:a")
         .attr("xlink:href", url)
         .attr("class", "hyperlink")
-        .on("click", function () {
+        .on("mousedown", function () {
             d3.event.stopPropagation();
         });
     var icon = null;

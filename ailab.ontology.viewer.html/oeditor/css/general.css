@@ -72,3 +72,51 @@
 .hyperlink:visited {
     fill: #000088;
 }
+
+.splitter {
+    stroke: red;
+    stroke-width: 2;
+}
+
+.paginatorBox > rect {
+    stroke-width: 2;
+    fill: white;
+}
+
+.paginatorText {
+    font-family: Helvetica,sans-serif;
+    font-size: 20px;
+    user-select: none;
+    -webkit-user-select: none; /* Chrome/Safari */
+    -moz-user-select: none;    /* Firefox */
+    -ms-user-select: none;     /* IE10+ */
+}
+.paginatorBox:hover .paginatorText {
+    font-weight: bolder;
+}
+
+.paginatorBox input {
+    text-align: center;
+    -moz-border-radius: 10px;
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+    border-width: 0;
+    outline: 0;
+    font-family: Helvetica,sans-serif;
+    font-size: 20px;
+    background: transparent;
+}
+
+.paginatorButton > rect {
+    stroke-width: 1.5;
+    fill: white;
+}
+
+.paginatorButton > text {
+    font-family: Times;
+    text-decoration: none;
+    user-select: none;
+    -webkit-user-select: none; /* Chrome/Safari */
+    -moz-user-select: none;    /* Firefox */
+    -ms-user-select: none;     /* IE10+ */
+}
