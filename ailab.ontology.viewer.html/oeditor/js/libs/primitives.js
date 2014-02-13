@@ -885,8 +885,8 @@ function sparqlQueryJsonThroughService(queryStr, endpoint, defaultGraph, service
     errorHandler = (arguments.length == 4) ? errorHandler : function (d) {
     };
     //var format = "SPARQL/JSON";
-    var format = "JSON";
-    var querypart = endpoint+ ((defaultGraph)?"$?default-graph-uri=" + encodeURIComponent("http://dbpedia.org")+"&":"$?")+"query="+encodeURIComponent(queryStr) + "&format=" + encodeURIComponent(format);
+    var format = "sparql";
+    var querypart = endpoint+ ((defaultGraph)?"$?default-graph-uri=" + encodeURIComponent("http://dbpedia.org")+"&":"$?")+"query="+encodeURIComponent(queryStr) + "&output=" + encodeURIComponent(format);
     querypart = querypart.replace(/&&/g, '+%26%26+');
     querypart+="$get";
     //http://localhost/oed/mirror/?http://localhost:8888/sparql$?query=select%20*%20where%20%7B?a%20?b%20rdfs:label%0A%7D&format=SPARQL/JSON;
