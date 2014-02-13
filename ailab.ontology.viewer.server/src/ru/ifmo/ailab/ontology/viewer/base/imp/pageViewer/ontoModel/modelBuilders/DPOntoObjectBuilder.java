@@ -97,7 +97,9 @@ public class DPOntoObjectBuilder extends ANotStartSequenceModelBuilder<DPOntoObj
                 if (value != null)
                     toRet.getDataProps().add(new DataPropertyValue(sdpI, value));
                 else
-                    toRet.getDataProps().add(new DataPropertyValue(sdpI, "?"));
+                {
+                    //toRet.getDataProps().add(new DataPropertyValue(sdpI, "?"));
+                }
             }
         } catch (Exception e) {
             logger.error(e);
