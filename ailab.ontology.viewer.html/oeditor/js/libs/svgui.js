@@ -18,10 +18,10 @@ var svgui = {};
                     helper.html(textGenerator(d))
                         .style("left", (d3.event.pageX + params.x) + "px")
                         .style("top", (d3.event.pageY + params.y) + "px");
-                }).on("mousemove.tooltip", function (d) {
+                }).on("mousemove.tooltip", function () {
                     helper.style("left", (d3.event.pageX + params.x) + "px")
                         .style("top", (d3.event.pageY + params.y) + "px");
-                }).on("mouseout.tooltip", function (d) {
+                }).on("mouseout.tooltip", function () {
                     helper.transition()
                         .delay(params.edelay)
                         .duration(params.eduration)
@@ -368,7 +368,7 @@ var svgui = {};
         });
 
         var textBox = root.append("g").attr("class", "paginatorBox");
-        var rect = textBox.append("rect").attr("rx", cornerRadius).attr("ry", cornerRadius);
+        rect = textBox.append("rect").attr("rx", cornerRadius).attr("ry", cornerRadius);
         paginator.label = Label({parent: textBox, raze: false, textClass: "paginatorText", margin: {left: 5, right: 5, top: 3, bottom: 3}});
         textBox.on("mouseover", function () {
             rect.attr("stroke", d3.rgb(paginator.color).brighter());
@@ -476,6 +476,12 @@ var svgui = {};
                         formToRemove.remove();
                     }
                 }
+            })
+            .on("input", function () {
+                // HACK: force webkit to redraw input field; see the following url for details:
+                // http://stackoverflow.com/questions/8185845/svg-foreignobject-behaves-as-though-absolutely-positioned-in-webkit-browsers
+                form.attr("transform", "translate(1,1)");
+                form.attr("transform", null);
             });
     }
 })(svgui);
