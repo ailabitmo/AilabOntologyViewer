@@ -31,7 +31,7 @@ public class ObjPropsPageViewBuilder extends AStartSequenceModelBuilder<ObjProps
         int pageNumber = getPageNumber(reqId,context);
 
         QueryEngineHTTP engine = null;
-        String query = null;
+        String query = DEFAULT_PREFIX;
         try {
             context.waitMessage("Querying SPARQL...");
             ObjPropsPageView toRet = new ObjPropsPageView(reqId);
@@ -44,20 +44,20 @@ public class ObjPropsPageViewBuilder extends AStartSequenceModelBuilder<ObjProps
             );
 
             if (reqId.getDirection() == Direction.IN)
-                query = "select distinct ?objProperty ?labelPrefered ?direction where {" +
+                query += "select distinct ?objProperty ?labelPrefered ?direction where {" +
                         "_:a ?objProperty   <" + reqId.getIdOfInstance() + ">." +
                         "?objProperty a owl:ObjectProperty." +
                         labelHelper.getLanguageSelectorRequestPart() +
                         "bind (\"IN\" as ?direction)} order by ?labelPrefered limit " + reqId.getPageProps().getCurrentLimit() + " offset " + reqId.getPageProps().getCurrentOffset();
             else if (reqId.getDirection() == Direction.OUT)
-                query = "select distinct ?objProperty ?labelPrefered ?direction where {" +
+                query += "select distinct ?objProperty ?labelPrefered ?direction where {" +
                         "<" + reqId.getIdOfInstance() + ">  ?objProperty _:a." +
                         "?objProperty a owl:ObjectProperty." +
                         labelHelper.getLanguageSelectorRequestPart() +
                         "bind (\"OUT\" as ?direction)} order by ?labelPrefered limit " + reqId.getPageProps().getCurrentLimit() + " offset " + reqId.getPageProps().getCurrentOffset();
 
             else if (reqId.getDirection() == Direction.BOTH)
-                query = "select distinct ?objProperty ?labelPrefered ?direction where {" +
+                query += "select distinct ?objProperty ?labelPrefered ?direction where {" +
                         "{<" + reqId.getIdOfInstance() + ">  ?objProperty _:a." +
                         "?objProperty a owl:ObjectProperty." +
                         labelHelper.getLanguageSelectorRequestPart() +
@@ -103,7 +103,7 @@ public class ObjPropsPageViewBuilder extends AStartSequenceModelBuilder<ObjProps
 
         //Try to select
         QueryEngineHTTP engine = null;
-        String query = "";
+        String query = DEFAULT_PREFIX;
         try {
             if (reqId.getDirection() == Direction.IN)
                 query = "select (COUNT(distinct ?objProperty) AS ?count ) where {\n" +

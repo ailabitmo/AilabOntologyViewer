@@ -30,7 +30,7 @@ public class InstsPageViewBuilder extends AStartSequenceModelBuilder<InstsPageVi
         int pageNumber = getPageNumber(req, context);
 
         QueryEngineHTTP engine = null;
-        String query = null;
+        String query = DEFAULT_PREFIX;
         try {
 
             context.waitMessage("Selecting instance list...");
@@ -45,13 +45,13 @@ public class InstsPageViewBuilder extends AStartSequenceModelBuilder<InstsPageVi
             );
 
             if (req.getDirection() == Direction.IN || req.getDirection() == Direction.BOTH)//Both is bad here, should be on of IN and OUT
-                query = "select distinct ?item ?labelPrefered where {" +
+                query += "select distinct ?item ?labelPrefered where {" +
                         "?item <" + req.getObjPropId() + "> <" + req.getIdOfInstance() + ">" +
                         labelHelper.getLanguageSelectorRequestPart() +
                         "} order by ?labelPrefered limit " + req.getPageProps().getCurrentLimit() + " offset " + req.getPageProps().getCurrentOffset();
 
             else if (req.getDirection() == Direction.OUT)
-                query = "select distinct ?item ?labelPrefered where {" +
+                query += "select distinct ?item ?labelPrefered where {" +
                         "<" + req.getIdOfInstance() + "> <" + req.getObjPropId() + "> ?item." +
                         labelHelper.getLanguageSelectorRequestPart() +
                         "} order by ?labelPrefered limit " + req.getPageProps().getCurrentLimit() + " offset " + req.getPageProps().getCurrentOffset();
@@ -88,14 +88,14 @@ public class InstsPageViewBuilder extends AStartSequenceModelBuilder<InstsPageVi
 
         //Try to select
         QueryEngineHTTP engine = null;
-        String query = "";
+        String query = DEFAULT_PREFIX;
         try {
             if (req.getDirection() == Direction.IN || req.getDirection() == Direction.BOTH)
-                query = "select (COUNT(distinct ?item) AS ?count ) where {\n" +
+                query += "select (COUNT(distinct ?item) AS ?count ) where {\n" +
                         "?item <"+req.getObjPropId()+"> <" + req.getIdOfInstance() + ">.\n" +
                         "}";
             else if (req.getDirection() == Direction.OUT)
-                query = "select (COUNT(distinct ?item) AS ?count ) where {\n" +
+                query += "select (COUNT(distinct ?item) AS ?count ) where {\n" +
                         " <" + req.getIdOfInstance() + "> <"+req.getObjPropId()+"> ?item.\n" +
                         "}";
 
