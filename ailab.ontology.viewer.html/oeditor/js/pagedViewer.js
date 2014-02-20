@@ -17,6 +17,7 @@ ailab.kiv.pageViewer = function(p){
         nodeWidth: 330, nodeDif: 100,  //Width of element and width of sum of left and right link connectors between elements
         heightBetweenNodesOfOneParent: 10, heightBetweenNodesOfDifferentParent: 40, //Height between leaf nodes of one parent and different parents
         animdur: 500, buttonWidth: 15, // animation duration and width of buttons
+        discardAnimDuration: 200,      // animation duration when elements discarded
         tooltiper:tooltip //tooltiper
     };
     p = (arguments.length == 1) ? mergeProperties(p, defaultParams) : defaultParams;
@@ -68,7 +69,7 @@ ailab.kiv.pageViewer = function(p){
         resetState();
         var defaultParams = {
             containerid: 'chart', idOfInstance: null, sparqlEndpoint: "", service: "",
-            pageLimitForObjectProperties:15, pageLimitForInstances:10, interval:500/*ms*/
+            pageLimitForObjectProperties:15, pageLimitForInstances:10, interval: 500 /*ms*/
         };
         renderParams = (arguments.length == 1) ? mergeProperties(renderParamz, defaultParams) : defaultParams;
 
@@ -90,22 +91,19 @@ ailab.kiv.pageViewer = function(p){
     //Separation functions between neighbouring leafs of the tree
     function separationFunc(a, b) {
         //a and b should have ui field with height() method
-
         var height1 = calcHeight(a);
         var height2 = calcHeight(b);
 
         var dif = height1 / 2 + height2 / 2 + (a.parent == b.parent ? p.heightBetweenNodesOfOneParent : p.heightBetweenNodesOfDifferentParent);
-
         return dif;
+    }
 
-        //We are calculating height depending on the element type differently
-        function calcHeight(element){
-            if(element.type == elementTypes.instance ) return ( element.expanded)?  element.uiExpanded.height(p.nodeWidth-p.nodeDif) : element.ui.height(p.nodeWidth-p.nodeDif);
-            else if (element.type == elementTypes.objProperty) return element.ui.height(p.nodeWidth-p.nodeDif)+30;
-            //else if (element.type == elementTypes.paginator) return element.ui.height(p.nodeWidth-p.nodeDif)+30;
-            else if (element.type == elementTypes.paginator) return 35;
-            else if (element.type == elementTypes.loader) return element.ui.height(p.nodeWidth-p.nodeDif)+30;
-        }
+    //We are calculating height depending on the element type differently
+    function calcHeight(element){
+        if(element.type == elementTypes.instance ) return ( element.expanded)?  element.uiExpanded.height(p.nodeWidth-p.nodeDif) : element.ui.height(p.nodeWidth-p.nodeDif);
+        else if (element.type == elementTypes.objProperty) return element.ui.height(p.nodeWidth-p.nodeDif)+30;
+        else if (element.type == elementTypes.paginator) return 35;
+        else if (element.type == elementTypes.loader) return element.ui.height(p.nodeWidth-p.nodeDif)+30;
     }
 
     //Reseting state of the tree
@@ -114,7 +112,7 @@ ailab.kiv.pageViewer = function(p){
         arrayOfClassVals = null; // cached array of class values
         arrayOfClassKeys = null; // cached array of class keys
         objectProperties = {}; //known object properties
-        arrayOfObjectPropVals = null; //array of object property valuess
+        arrayOfObjectPropVals = null; //array of object property values
         arrayOfObjectPropKeys = null; //array of object property keys
         dataTypeProperties = {}; // known data properties
         arrayOfDataPropsVals = null; // array of data properties values
@@ -161,48 +159,82 @@ ailab.kiv.pageViewer = function(p){
                             if (d.type == elementTypes.paginator) createPaginator(d, d3.select(this));
                             else if (d.type == elementTypes.loader) createLoader(d, d3.select(this));
                         } else {
-                            if (d.type == elementTypes.paginator) this.appendChild(d._ui.root.node());
+                            if (d.type == elementTypes.paginator)   this.appendChild(d._ui.root.node());
+                            else if (d.type == elementTypes.loader) this.appendChild(d._ui.root.node());
                         }
                         return "translate(" + d.parent.y + "," + d.parent.x + ")";
                     } else return "translate(0,0)";
-            });
+                });
 
-            exit.transition().duration(p.animdur).style('opacity', 0).attr('transform', function (d) {
-                    if (typeof d === 'object' && 'parent' in d) return "translate(" + d.parent.y + "," + d.parent.x + ")";
-                    else return "translate(0,0)";}).remove();
+            exit.filter(function (d) { return !d.wasDiscarded; })
+                .transition().duration(p.animdur).style('opacity', 0).attr('transform', function (d) {
+                    if (typeof d !== 'object' || !('parent' in d)) return "translate(0,0)";
+                    else return "translate(" + d.parent.y + "," + d.parent.x + ")";
+                }).remove();
+            exit.filter(function (d) { return d.wasDiscarded; })
+                .transition().duration(p.animdur).style('opacity', 0).remove();
 
-            update.transition().duration(p.animdur).attr("transform", function (d) { return "translate(" + d.y + "," + d.x + ")";})
-                .style('opacity', 1)
+            update.attr('pointer-events', function (d) { return willBeDiscarded(d) ? 'none' : null; })
+                .transition().duration(function (d) { return willBeDiscarded(d) ? p.discardAnimDuration : p.animdur; })
+                .attr("transform", function (d) { return "translate(" + d.y + "," + d.x + ")";})
+                .style('opacity', function (d) { return willBeDiscarded(d) ? 0.2 : 1; })
                 .each(function (d) {
                     var thisItem = d3.select(this);
                     if (d.type == elementTypes.paginator)   { updatePaginator(d, thisItem); }
                     else if (d.type == elementTypes.loader) { updateLoader(d, thisItem); }
                     else {
                         thisItem.text('');
-                        if (d.type == elementTypes.objProperty) paintObjProperty(d,thisItem);
-                        else if (d.type == elementTypes.instance) paintInstance(d,thisItem);
+                        if (d.type == elementTypes.objProperty) paintObjProperty(d, thisItem);
+                        else if (d.type == elementTypes.instance) paintInstance(d, thisItem);
                     }
                 });
 
             function createPaginator(d, parent) {
                 d._ui = svgui.Paginator({parent: parent, color: d.parent.color, width: 160});
-                d._ui.onPageChanged = function (page) {
-                    if (d.parent.type == elementTypes.objProperty) {
-                        requestForInstances(d.parent.parent, d.parent, page, renderParams.pageLimitForInstances);
-                    } else if (d.parent.type == elementTypes.instance) {
-                        requestForObjPropPage(d.parent, page, renderParams.pageLimitForObjectProperties);
-                    }
-                };
+                d._ui.onPageChanged = function (page) { onPageChanged(page, d, d.parent); };
+            }
+
+            function onPageChanged(newPage, paginatorModel, parentModel) {
+                if (parentModel.pageRequest && parentModel.pageRequest.isRunning)
+                    parentModel.pageRequest.cancel();
+                if (parentModel.pageIndicator)
+                    parentModel.pageIndicator.remove();
+                var minX = Infinity;
+                var minY = Infinity, maxY = -Infinity;
+                panel.selectAll(".node").filter(function (nodeData) {
+                    return nodeData.parent === parentModel && nodeData.type != elementTypes.paginator;
+                }).each(function (d) {
+                    // d.x and d.y are swapped here
+                    minX = Math.min(minX, d.y);
+                    var height = calcHeight(d);
+                    minY = Math.min(minY, d.x - height / 2);
+                    maxY = Math.max(maxY, d.x + height / 2);
+                });
+
+                var size = 35, margin = 15, nodeSize = p.nodeWidth - p.nodeDif;
+                var position = vector(minX - nodeSize / 2 + size / 2 + margin,  minY + (maxY - minY) / 2);
+                var indicator = Indicator.create(panel, {size: 40, position: position, maxWidth: nodeSize - margin}).run();
+                parentModel.pageIndicator = indicator;
+                paginatorModel.currentPage = newPage;
+
+                if (parentModel.type == elementTypes.objProperty) {
+                    parentModel.pageRequest = requestForInstances(parentModel, newPage, renderParams.pageLimitForInstances, indicator);
+                } else if (parentModel.type == elementTypes.instance) {
+                    parentModel.pageRequest = requestForObjPropPage(parentModel, newPage, renderParams.pageLimitForObjectProperties, indicator);
+                }
+                paintAll();
             }
 
             function createLoader(d, parent) {
                 var indicatorSize = 30;
                 var container = parent.append("g").attr("width", indicatorSize).attr("height", indicatorSize);
-                d._ui = Indicator.create(container, indicatorSize);
+                d._ui = Indicator.create(container, {size: indicatorSize}).run();
+                d._ui.root = container;
+                updateIndicatorUI(d);
             }
 
-            function paintObjProperty(d,d3This){
-                var uiElement = d.ui; // ui.SimpleText({ text: d.name, textClass: "paragraphHeaderGraph", vertMargin: 5, raze: true});
+            function paintObjProperty(d, d3This){
+                var uiElement = d.ui;
                 var halfWidth = (p.nodeWidth-p.nodeDif) / 2;
                 var ti = textInfo(d.name, "basicTextInGraph");
                 uiElement.render(d3This, 0 -( (ti.width/2>=halfWidth)?halfWidth:((ti.width)/2)), 10, p.nodeWidth - p.nodeDif);
@@ -219,13 +251,10 @@ ailab.kiv.pageViewer = function(p){
 
                 function rightAction(){
                     if(d['children'] || d['_children'] ){ //If children exist - swaping children
-                        if (!('_children' in d))d._children = false;
-                        if (d._children) {d.children = d._children;d._children = false;}
-                        else {d._children = d.children;d.children = false;}
+                        expandOrCollapseChildren(d);
                         paintAll();
                     } else rightActionForObjectProperty(d); // else trying to execute right action
                 }
-
             }
 
             function paintInstance(d,d3This){
@@ -245,9 +274,7 @@ ailab.kiv.pageViewer = function(p){
                     rightEar = createEar(d, d3This, 0 , -(leftRightHeight / 2) + 1, halfWidth + p.buttonWidth ,
                         leftRightHeight, uiElement, function(){
                             if(d['children'] || d['_children'] ){ //If children exist - swaping children
-                                if (!('_children' in d))d._children = false;
-                                if (d._children) {d.children = d._children;d._children = false;}
-                                else {d._children = d.children;d.children = false;}
+                                expandOrCollapseChildren(d);
                                 paintAll();
                             } else rightActionForInstance(d); // else trying to execute right action
                         } ,
@@ -283,11 +310,6 @@ ailab.kiv.pageViewer = function(p){
                 }
             }
 
-            function paintLoader(d,d3This){
-                var leftRightHeight = d.ui.height(p.nodeWidth - p.nodeDif);
-                d.ui.render(d3This, -((p.nodeWidth-p.nodeDif) / 2)+5, -leftRightHeight / 2, p.nodeWidth-p.nodeDif);
-            }
-
             function updatePaginator(d, d3This) {
                 d._ui.currentPage = d.currentPage;
                 d._ui.pageCount = d.overallPages;
@@ -312,13 +334,21 @@ ailab.kiv.pageViewer = function(p){
             var exit = update.exit();
 
             enter.append("path").attr("class", "link").attr('stroke', function (d) {
-                    if(d.source.type == elementTypes.instance) return d.source.color;
-                    else if(d.source.type == elementTypes.objProperty) return d.source.parent.color;
+                    if (d.source.type == elementTypes.instance) return d.source.color;
+                    else if (d.source.type == elementTypes.objProperty) return d.source.parent.color;
             }).style('opacity',0);
 
-            update.transition().duration(p.animdur).attr("d", function (d) {
+            exit.filter(function (d) { return !d.target.wasDiscarded; })
+                .transition().duration(p.animdur).attr("d", function (d) {
+                    var o = {x: d.target.x, y: d.target.y};
+                    return diagonal({source: o, target: o});
+                }).style('opacity', 0).remove();
+            exit.filter(function (d) { return d.target.wasDiscarded; }).remove();
+
+            update.transition().duration(function (d) { return willBeDiscarded(d.target) ? p.discardAnimDuration : p.animdur; })
+                .attr("d", function (d) {
                 /// !!!!! X and Y are inverted here!!!!!
-                    if(d.source.type == elementTypes.paginator || d.target.type == elementTypes.paginator ) return "M"+ d.target.y+","+ d.target.x;
+                    if (d.target.type == elementTypes.paginator) return "M"+ d.target.y+","+ d.target.x;
                     var m = (d.source.y + d.target.y) / 2;
                     var halfWidth = (p.nodeWidth-p.nodeDif) / 2;
                     var k = [
@@ -332,7 +362,7 @@ ailab.kiv.pageViewer = function(p){
                     var prefix = "M";
                     var suffix = "";
                     var firstDone = false;
-                    if (d.target.type==elementTypes.objProperty)//if left element is object property - we make a long line
+                    if (d.target.type == elementTypes.objProperty)//if left element is object property - we make a long line
                         suffix += "M" + (d.target.y - halfWidth) + "," + d.target.x +" L" + (d.target.y+halfWidth ) + "," + d.target.x;
 
                     k = k.map(function (d) { return [ d.y, d.x ];});
@@ -342,13 +372,7 @@ ailab.kiv.pageViewer = function(p){
                     });
 
                     return prefix + toRet.trim() + suffix;
-                }).style('opacity',1);
-
-            exit.transition().duration(p.animdur).attr("d", function (d) {
-                    var o = {x: d.target.x, y: d.target.y};
-                    return diagonal({source: o, target: o});
-                }).style('opacity', 0).remove();
-
+                }).style('opacity', function (d) { return willBeDiscarded(d.target) ? 0.2 : 1; });
         }
     }
 
@@ -419,18 +443,24 @@ ailab.kiv.pageViewer = function(p){
 
     //Generate function which will be invoked if clicked on right ear of some element with d data
     function rightActionForInstance(d){
-        requestForObjPropPage(d,1, renderParams.pageLimitForObjectProperties);
+        var indicatorModel = fillModelForIndicator();
+        d.children = [indicatorModel];
+        requestForObjPropPage(d, 1, renderParams.pageLimitForObjectProperties, indicatorModel);
+        paintAll();
     }
 
     //Generate function which will be invoked if clicked on right ear of some element with d data
-    function rightActionForObjectProperty(d){
-        requestForInstances(d.parent,d,1,renderParams.pageLimitForInstances);
+    function rightActionForObjectProperty(d) {
+        var indicatorModel = fillModelForIndicator();
+        d.children = [indicatorModel];
+        requestForInstances(d, 1, renderParams.pageLimitForInstances, indicatorModel);
+        paintAll();
     }
 
     //Generate function which will be invoked if clicked on center of instance element
     function centerAction(d){
         return function () {
-            if(!d.dpLoaded) requestForDataProperties(d, d.uiExpanded);
+            if (!d.dpLoaded) requestForDataProperties(d, d.uiExpanded);
             d.expanded = !d.expanded;
             paintAll();
         };
@@ -502,18 +532,39 @@ ailab.kiv.pageViewer = function(p){
     }
 
     //filling model for loading indicator
-    function fillModelForIndicator(text){
-        var indicator = {}; //creating loader and setting it as a child until loading done
-        indicator.uniqueId =generateUniqueId();
-        indicator.info= text;
-        indicator.ui = fillIndicatorUI(indicator);
-        indicator.type = elementTypes.loader;
-        return indicator;
+    function fillModelForIndicator(text) {
+        if (typeof text == "undefined") { text = null; }
+        return {
+            uniqueId: generateUniqueId(),
+            type: elementTypes.loader,
+            info: text,
+            isErrorOccurred: false,
+            ui: fillIndicatorUI({info: ""}),
+            status: function (text) {
+                this.info = text;
+                updateIndicatorUI(this);
+            },
+            error:  function () {
+                this.isErrorOccurred = true;
+                updateIndicatorUI(this);
+            },
+            remove: function () {}
+        };
+    }
+
+    function updateIndicatorUI(indicatorModel) {
+        var ui = indicatorModel._ui;
+        if (ui) {
+            if (indicatorModel.info)
+                ui.status(indicatorModel.info);
+            if (indicatorModel.isErrorOccurred)
+                ui.error();
+        }
     }
 
     function fillPaginatorModel(pageNum,currentLimit,maxPages){
         var paginator = {}; //creating loader and setting it as a child until loading done
-        paginator.uniqueId =generateUniqueId();
+        paginator.uniqueId = generateUniqueId();
         paginator.currentPage= pageNum;
         paginator.overallPages = maxPages;
         paginator.limit = currentLimit;
@@ -522,12 +573,26 @@ ailab.kiv.pageViewer = function(p){
         return paginator;
     }
 
+    function expandOrCollapseChildren(parent) {
+        if (!('_children' in parent)) { parent._children = false; }
+        var isCollapsed = Boolean(parent._children);
+        if (parent.pageIndicator) { parent.pageIndicator.visible(isCollapsed); }
+        if (isCollapsed) { parent.children = parent._children; parent._children = false; }
+        else { parent._children = parent.children; parent.children = false; }
+    }
+
+    function willBeDiscarded(model) {
+        if (model.type == elementTypes.paginator) { return false; }
+        return model.parent && model.parent.pageRequest &&
+            (model.parent.pageRequest.isRunning || model.parent.pageRequest.isFailed);
+    }
+
     //_______________REQUESTS
 
     //First request which retrieves info about root element
     //example: http://dbpedia.org/sparql$instanceGeneralInfo.InstanceGeneralInfoRequest$http://dbpedia.org/resource/Blackmore's_Night
-    function initialRootRequest(){
-        var indicator = Indicator.create(svg);
+    function initialRootRequest() {
+        var indicator = WrapIndicator.wrap(svg);
         var request = kiv.smartServerRequest({
             request: renderParams.sparqlEndpoint+"$instanceGeneralInfo.InstanceGeneralInfoRequest$"+renderParams.idOfInstance,
             url: renderParams.service,
@@ -537,85 +602,120 @@ ailab.kiv.pageViewer = function(p){
                     var result = (eval('(' + d + ')'));
                     updateCachedData(result);
                     mainRoot = fillModelForInstance(result.request,false);
-                    indicator.stop();
-                    requestForObjPropPage(mainRoot,1, renderParams.pageLimitForObjectProperties);
+                    indicator.remove();
+                    var indicatorModel = fillModelForIndicator();
+                    mainRoot.children = [indicatorModel];
+                    requestForObjPropPage(mainRoot, 1, renderParams.pageLimitForObjectProperties, indicatorModel);
+                    paintAll();
                     zoomer.translate(-mainRoot.y+ p.nodeWidth/2, -mainRoot.x+h/2);
                 } catch (e) {
-                    alert(e);
-                    /*indicator.error();indicator.text(e, *//*TODO style for error msg*//* "error style???");*/
+                    this.errorHandler(e);
                 }
             },
-            errorHandler:function(d){indicator.error();indicator.status(d);},
-            interval:renderParams.interval
+            errorHandler: function(d) {
+                indicator.error();
+                indicator.status(d);
+            },
+            interval: renderParams.interval
         });
         //todo there should exist ui component which would invoke request.cancel() if needed
     }
 
     //Request for object properties page of an instance
     //example: http://dbpedia.org/sparql$objPropsPage.ObjPropsPageRequest$http://dbpedia.org/resource/United_States$BOTH$1$10
-    function requestForObjPropPage(instance, pageNum, currentLimit){
-        instance.children = [fillModelForIndicator("Loading...")];
+    function requestForObjPropPage(instance, pageNum, currentLimit, indicator) {
+        indicator.status("Loading...");
         var request = kiv.smartServerRequest({
             request: renderParams.sparqlEndpoint+"$objPropsPage.ObjPropsPageRequest$"+instance.id+"$BOTH$"+pageNum+"$"+currentLimit,
             url: renderParams.service,
-            waitHandler: function(d){/*TODO indicatorUi.text(d,  style for wait msg "wait style???");*/},
+            waitHandler: function(d) { indicator.status(d); },
             finishHandler: function(d){
                 try {
                     var result = (eval('(' + d + ')'));
                     updateCachedData(result);
-                    instance.children = [];
-                    if (result.request.pageNum > 1) {
-                        instance.children.push(fillPaginatorModel(pageNum, currentLimit, result.request.pageNum));
+                    var children = getChildren(instance);
+                    discardPageElements(children, elementTypes.objProperty);
+                    if (result.request.pageNum > 1 && children.length == 0) {
+                        children.push(fillPaginatorModel(pageNum, currentLimit, result.request.pageNum));
                     }
-                    each(result.request.values, function(d){
-                        instance.children.push(fillModelForObjectProperty(d,instance.color));
+                    each(result.request.values, function (d) {
+                        children.push(fillModelForObjectProperty(d, instance.color));
                     });
                     paintAll();
-                    zoomer.translate(-instance.y+ p.nodeWidth/2, -instance.x+h/2);
+                    zoomer.translate(-instance.y + p.nodeWidth / 2, -instance.x + h / 2);
+                    indicator.remove();
                 } catch (e) {
-                    alert(e);
-                    /*todo indicatorUi.error();indicatorUi.text(d, TODO style for error msg "error style???");*/
+                    this.errorHandler(e);
                 }
             },
-            errorHandler:function(d){/*todo indicatorUi.error();indicatorUi.text(d, TODO style for error msg "error style???");*/},
-            interval:renderParams.interval
+            errorHandler: function(d) {
+                indicator.status(d);
+                indicator.error();
+            },
+            interval: renderParams.interval
         });
-        //todo there should exist ui component which would invoke request.cancel() if needed
-        paintAll();
+        return request;
     }
 
-    //Request for instances of a particular object property (of a particular instance :))
-    //example: http://dbpedia.org/sparql$instsPage.InstsPageRequest$http://dbpedia.org/resource/United_States$IN$http://dbpedia.org/ontology/almaMater$1$503
-    function requestForInstances(instance,objProperty, pageNum, currentLimit){
-        objProperty.children = [fillModelForIndicator("Loading...")];
+    /**
+     * Request for instances of a particular object property (of a particular instance :))
+     * example: http://dbpedia.org/sparql$instsPage.InstsPageRequest$http://dbpedia.org/resource/United_States$IN$http://dbpedia.org/ontology/almaMater$1$503
+     *
+     * @param indicator {status: function(text), error: function(), remove: function()}
+     * @returns kiv.smartServerRequest object
+     */
+    function requestForInstances(objProperty, pageNum, currentLimit, indicator) {
+        var instance = objProperty.parent;
+        indicator.status("Loading...");
         var request = kiv.smartServerRequest({
             request: renderParams.sparqlEndpoint+"$instsPage.InstsPageRequest$"+instance.id+"$"+objProperty.direction+"$"+objProperty.objPropId+"$"+pageNum+"$"+currentLimit,
             url: renderParams.service,
-            waitHandler: function(d){/*TODO indicatorUi.text(d,  style for wait msg "wait style???");*/},
-            finishHandler: function(d){
+            waitHandler: function (d) { indicator.status(d); },
+            finishHandler: function(d) {
+                if (request.isCancelled) {
+                    indicator.remove();
+                    return;
+                }
                 try {
                     var result = (eval('(' + d + ')'));
                     updateCachedData(result);
-                    objProperty.children = [];
-                    if (result.request.pageNum > 1) {
-                        objProperty.children.push(fillPaginatorModel(pageNum, currentLimit, result.request.pageNum));
+                    var children = getChildren(objProperty);
+                    discardPageElements(children, elementTypes.instance);
+                    if (result.request.pageNum > 1 && children.length == 0) {
+                        children.push(fillPaginatorModel(pageNum, currentLimit, result.request.pageNum));
                     }
-                    each(result.request.values, function(d){
-                        objProperty.children.push(fillModelForInstance(d,false));
+                    each(result.request.values, function (d) {
+                        children.push(fillModelForInstance(d, false));
                     });
                     paintAll();
-                    //zoomer.translate(-instance.y+ p.nodeWidth/2, -instance.x+h/2);
-                    zoomer.translate(-objProperty.y+ p.nodeWidth/2, -objProperty.x+h/2);
+                    zoomer.translate(-objProperty.y + p.nodeWidth/2, -objProperty.x + h / 2);
+                    indicator.remove();
                 } catch (e) {
-                    alert(e);
-                    /*todo indicatorUi.error();indicatorUi.text(d, TODO style for error msg "error style???");*/
+                    this.errorHandler(e);
                 }
             },
-            errorHandler:function(d){/*todo indicatorUi.error();indicatorUi.text(d, TODO style for error msg "error style???");*/},
-            interval:renderParams.interval
+            errorHandler: function(d) {
+                indicator.status(d);
+                indicator.error();
+            },
+            interval: renderParams.interval
         });
-        //todo there should exist ui component which would invoke request.cancel() if needed
-        paintAll();
+        return request;
+    }
+
+    function getChildren(parentModel) {
+        return parentModel.children || parentModel._children;
+    }
+
+    function discardPageElements(children, type) {
+        var hasPaginator = children.length > 0 && children[0].type == elementTypes.paginator;
+        if (hasPaginator) {
+            each (children, function (child) {
+                if (child.type === type)
+                    child.wasDiscarded = true;
+            });
+        }
+        children.length = hasPaginator ? 1 : 0; // keep paginator if exists
     }
 
     //Request for data properties
@@ -676,6 +776,8 @@ instance type = {
     ui,              Ui field if expanded is false
     uiExpanded,      Ui field if expanded is true
     dpLoaded,        If data properties were not loaded - it is false, else it is true
+    pageRequest      Not null if there was a request for loading children object properties page.
+    wasDiscarded     Instance was discarded by loading another page within it's parent.
     type:"instance"
 }
 
@@ -687,12 +789,14 @@ objProperty type = {
     children*[],          Children are forming tree structure. * - is needed for d3
     direction,            "IN" or "OUT"
     ui,                   Field of ui related structures. Needed to calc height for example.
+    pageRequest           Not null if there was a request for loading children instances page.
     type: "objProperty"
 }
 
 loader type = {
     uniqueId,             globally unique id of element to identify it
     info,                 String with information about loading
+    isErrorOccurred        true if any error occured during remote request, otherwise false.
     ui                    Field of ui related structures. Needed to calc height for example.
 }
 

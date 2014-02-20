@@ -427,8 +427,6 @@ kiv.krand = function () {
 
     /**
      * Рандомный int, включая последний в интервале
-     * @param from
-     * @param to
      */
     krand.rInt = function (min, max) {
         if (min == max) return min;
@@ -777,7 +775,6 @@ kiv.smartServerRequest = function(params){
         waitHandler:function(str){},finishHandler:function(str){},errorHandler:function(str){}
     };
     var p = (arguments.length == 1) ? mergeProperties(params, defaultParams) : defaultParams;
-    var requestCancelled = false;
     var guidD = guid();
     var guidV = p.guidPrefix+ guidD;
     var lasWaitResponse=null;
@@ -785,19 +782,26 @@ kiv.smartServerRequest = function(params){
 
     var requestId = 0;
 
-    queryService(p.request+ p.guidPrefix+requestId++, p.url, requestHandler, function(){p.errorHandler("Connection error");});
+    queryService(p.request+ p.guidPrefix+requestId++, p.url, requestHandler, function(){error("Connection error");});
 
     function smartServerRequest(){}
+    smartServerRequest.isCancelled = false;
+    smartServerRequest.isRunning = true;
+    smartServerRequest.isFailed = false;
     smartServerRequest.cancel = function(){
-        /*requestCancelled=true;*/
-        queryService(p.cancelPrefix + guidV + p.guidPrefix+requestId++, p.url, requestHandler, function(){p.errorHandler("Connection error");});
+        this.isCancelled = true;
+        queryService(p.cancelPrefix + guidV + p.guidPrefix+requestId++, p.url, requestHandler, function(){error("Connection error");});
     };
     smartServerRequest.getGuid = function(){return guidD;};
     return smartServerRequest;
 
     function requestHandler(serverResponse){
-        if(serverResponse==null || serverResponse == "") p.errorHandler("Server sent no response");
-        if(serverResponse.indexOf(p.waitPrefix)==0){
+        if (smartServerRequest.isCancelled) {
+            finish(null);
+            return;
+        }
+        if (serverResponse==null || serverResponse == "") error("Server sent no response");
+        if (serverResponse.indexOf(p.waitPrefix)==0) {
             var response = serverResponse.substring(p.waitPrefix.length);
             if(lasWaitResponse==null || lasWaitResponse!=response){
                 lasWaitResponse = response;
@@ -805,12 +809,24 @@ kiv.smartServerRequest = function(params){
             }
             setTimeout(
                 function(){
-                    if(!requestCancelled) queryService(p.request+ p.guidPrefix+requestId++, p.url, requestHandler, function(){p.errorHandler("Connection error");});
+                    if(!smartServerRequest.isCancelled)
+                        queryService(p.request+ p.guidPrefix+requestId++, p.url, requestHandler, function(){error("Connection error");});
                 }, p.interval
             );
-        } else if (serverResponse.indexOf(p.finishPrefix)==0) p.finishHandler(serverResponse.substring(p.finishPrefix.length));
-        else if (serverResponse.indexOf(p.errorPrefix)==0) p.errorHandler(serverResponse.substring(p.errorPrefix.length));
-        else p.errorHandler("Unknown response signature");
+        } else if (serverResponse.indexOf(p.finishPrefix)==0) finish(serverResponse.substring(p.finishPrefix.length));
+        else if (serverResponse.indexOf(p.errorPrefix)==0) error(serverResponse.substring(p.errorPrefix.length));
+        else error("Unknown response signature");
+    }
+
+    function error(message) {
+        smartServerRequest.isRunning = false;
+        smartServerRequest.isFailed = true;
+        p.errorHandler(message);
+    }
+
+    function finish(result) {
+        smartServerRequest.isRunning = false;
+        p.finishHandler(result);
     }
 };
 

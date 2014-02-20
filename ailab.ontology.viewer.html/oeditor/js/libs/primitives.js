@@ -1009,5 +1009,35 @@ function anonym(uri) {
 //-----------------------------------------/Useful util functions
 //-----------------------------------------------------------------------------------------
 
+function mergeInto(targetObject, sourceObject) {
+    if (typeof targetObject == "undefined" || targetObject == null)
+        targetObject = {};
+    if (typeof sourceObject == "undefined" || sourceObject == null)
+        sourceObject = {};
+    for (var property in sourceObject) {
+        targetObject[property] = sourceObject[property];
+    }
+    return targetObject;
+}
+function mergeFrom(sourceObject, targetObject) {
+    return mergeInto(targetObject, sourceObject);
+}
 
+function vector(x, y) {
+    if (typeof y === "undefined") { y = x; }
+    return {x: x, y: y};
+}
 
+function _razeText(element, text, suffix, maxWidth, textProps, sufProps, tooltiper) {
+    if(sufProps==null) sufProps = {'width': 0, 'height': 0, 'baseLineHeight': 0};
+    if (textProps.width + sufProps.width > maxWidth) {
+        var maxLength = Math.floor(text.length * (maxWidth / textProps.width)) - 1 - suffix.length - "...".length; //3 на точки
+        element.text(text.substring(0, maxLength) + "..." + suffix);
+        if (tooltiper) tooltiper.bindTo(element, function (d, i) {
+            return text;
+        });
+    } else {
+        element.text(text + suffix);
+    }
+    return element;
+}

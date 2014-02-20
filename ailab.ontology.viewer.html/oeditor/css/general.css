@@ -60,6 +60,11 @@
     stroke-width: 1.5px;
 }
 
+.indicatorText {
+    font-family: "Andale Mono",sans-serif;
+    font-size: 15px;
+}
+
 .hyperlink {
     fill: #0000bb;
 }

@@ -35,89 +35,64 @@ var ReferenceClock = {
         return this.element.attr("__referenceTime");
     }
 };
-/**
- * Отображает индикатор ожидания вместо содержмого SVG-элемента.
- * Пример использования:
- *     var indicator = Indicator.create(d3.select("#svg"));
- *     d3.json("data.js", function(data) {
- *         indicator.stop();
- *         // отобразить data в svg
- *     });
- */
+
 var Indicator = {
     instances: [],
+    parent: null,
     statusText: null,
-    /**
-     * Создаёт новый индикатор, скрывая предыдущее содержимое SVG,
-     * и заменяя его на анимацию ожидания.
-     * @param svg - селектор SVG-элемента
-     */
-    create: function (svg, size) {
-        if (typeof size == "undefined") { size = 50; }
+    isErrorOccurred: false,
+    spacing: 5,
+    isVisible: true,
+    create: function (parent, params) {
+        params = mergeFrom(params, {
+            size: 50,
+            position: vector(parent.attr("width") / 2, parent.attr("height") / 2),
+            maxWidth: Infinity
+        });
         var indicator = Object.create(this);
-        indicator.parent = svg;
-        indicator.wrapper = svg.append("svg:g");
-        this.moveChildren(svg.node(), indicator.wrapper.node());
-        indicator.size = size;
-        indicator.wrapper
-            .transition()
-            .style("opacity", 0.2)
-            .each("end", function() {
-                indicator.animate(svg);
-            });
-        indicator.pointerEvents = svg.attr("pointer-events");
-        svg.attr("pointer-events", "none");
-        indicator.running = true;
+        indicator.parent   = parent;
+        indicator.size     = params.size;
+        indicator.position = params.position;
+        indicator.maxWidth = params.maxWidth;
         return indicator;
     },
-    /**
-     * Возвращает SVG-элемент в первоначальный вид.
-     */
-    stop: function () {
-        var index = Indicator.instances.indexOf(this);
-        if (index >= 0)
-            Indicator.instances.splice(index, 1);
-        if (!this.running)
-            return;
-        var svg = this.wrapper.node().parentNode;
-        d3.select(svg).attr("pointer-events", this.pointerEvents);
-        if (this.animation != null)
-            svg.removeChild(this.animation.node());
-        this.moveChildren(this.wrapper.node(), svg);
-        svg.removeChild(this.wrapper.node());
-        this.running = false;
-    },
-    error: function () {
-        this.stop();
+    run: function () {
+        this.animate(this.parent);
+        return this;
     },
     status: function(statusText) {
         this.statusText = statusText;
-        if (this.text) {
-            this.text.text(statusText);
-        }
+        this.updateState();
+    },
+    error: function () {
+        this.isErrorOccurred = true;
+        this.updateState();
+    },
+    visible: function (isVisible) {
+        this.isVisible = isVisible;
+        if (this.animation)
+            this.animation.attr("display", isVisible ? null : "none");
     },
     /**
      * Добавляет анимацию ожидания.
      * @param svg - селектор SVG-элемента
      */
     /*private*/ animate: function (svg) {
-        if (!this.running)
-            return;
         this.animation = svg.append("svg:g")
-            .attr("transform", "translate(" + svg.attr("width") / 2 + "," + svg.attr("height") / 2 + ")");
+            .attr("transform", "translate(" + this.position.x + "," + this.position.y + ")")
+            .attr("display", this.isVisible ? null : "none");
         var arrow = this.animation.append("svg:g");
-        arrow.append("svg:path")
+        this.arrowPath = arrow.append("svg:path")
             .attr("d", "m3.47,-19.7 a20,20 0 1,1 -6.95,0 m0,0 l-6,5 m6,-5 l-8,-0")
             .attr("transform", "scale(0.02)" + "scale(" + this.size + ")")
             .attr("fill", "none")
             .attr("stroke", "black")
             .attr("stroke-width", 3)
             .attr("stroke-linecap", "round");
-        var spacing = 5;
         this.text = this.animation.append("text")
+            .attr("class", "indicatorText")
             .attr("alignment-baseline", "middle")
-            .attr("x", this.size / 2 + spacing)
-            .text(this.statusText ? this.statusText : null);
+            .attr("x", this.size / 2 + this.spacing);
         // добавляем повторяющуюся анимацию вращения
         var duration = 1500;
         var time =  Indicator.instances.length > 0 ? Indicator.instances[0].clock.time() : 0;
@@ -129,7 +104,9 @@ var Indicator = {
             .attrTween("transform", function () {
                 return d3.interpolateString("rotate(" + startAngle + ")", "rotate(360)");
             }).each("end", rotateArrow);
+        var self = this;
         function rotateArrow() {
+            if (self.isErrorOccurred) { return; }
             clock.run(duration, 0);
             arrow.transition()
                 .duration(duration)
@@ -138,6 +115,70 @@ var Indicator = {
                 }).each("end", rotateArrow);
         }
         Indicator.instances.push(this);
+        this.updateState();
+    },
+    remove: function () {
+        if (!this.animation) { return; }
+        var index = Indicator.instances.indexOf(this);
+        if (index >= 0)
+            Indicator.instances.splice(index, 1);
+        this.parent.node().removeChild(this.animation.node());
+        this.animation = null;
+    },
+    /*private*/ updateState: function () {
+        if (this.text) {
+            var ti = textInfo(this.statusText, this.text.attr("class"));
+            var maxTextwidth = Math.max(this.maxWidth - this.spacing - this.size);
+            _razeText(this.text, this.statusText ? this.statusText : "", "", maxTextwidth, ti, null, svgui.Tooltip.instance);
+        }
+        if (this.animation && this.isErrorOccurred) {
+            this.arrowPath.attr("stroke", "red");
+            this.arrowPath.attr("d", this.arrowPath.attr("d") + "M-8,-8L8,8M-8,8L8,-8");
+        }
+    }
+};
+/**
+ * Displays an indicator of some operation on top of SVG element.
+ * Example usage:
+ *     var indicator = WrapIndicator.create(d3.select("#svg"));
+ *     d3.json("data.js", function(data) {
+ *         indicator.remove();
+ *         // display the data in #svg
+ *     });
+ */
+var WrapIndicator = {
+    wrap: function (parent, params) {
+        var wrapIndicator = Object.create(this);
+        wrapIndicator.parent = parent;
+        wrapIndicator.wrapper = parent.append("svg:g");
+        this.moveChildren(parent.node(), wrapIndicator.wrapper.node());
+        this.indicator = Indicator.create(parent, params);
+        wrapIndicator.wrapper
+            .transition()
+            .style("opacity", 0.2)
+            .each("end", function() {
+                if (wrapIndicator.running) {
+                    wrapIndicator.indicator.run();
+                }
+            });
+        wrapIndicator.pointerEvents = parent.attr("pointer-events");
+        parent.attr("pointer-events", "none");
+        wrapIndicator.running = true;
+        return wrapIndicator;
+    },
+    status: function (statusText) {
+        this.indicator.status(statusText);
+    },
+    error: function () {
+        this.indicator.error();
+    },
+    remove: function () {
+        if (!this.running) { return; }
+        this.running = false;
+        this.indicator.remove();
+        this.parent.attr("pointer-events", this.pointerEvents);
+        this.moveChildren(this.wrapper.node(), this.parent.node());
+        this.parent.node().removeChild(this.wrapper.node());
     },
     /**
      * Перемещает дочерние узлы из узла from в узел to,
