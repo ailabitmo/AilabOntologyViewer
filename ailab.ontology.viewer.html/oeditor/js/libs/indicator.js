@@ -96,7 +96,7 @@ var Indicator = {
             .attr("stroke-linecap", "round");
         this.text = this.animation.append("text")
             .attr("class", "indicatorText")
-            .attr("alignment-baseline", "middle")
+            .style("dominant-baseline", "middle")
             .attr("x", this.size / 2 + this.spacing);
         // добавляем повторяющуюся анимацию вращения
         var duration = 1500;
