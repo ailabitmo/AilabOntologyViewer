@@ -781,7 +781,6 @@ kiv.smartServerRequest = function(params){
     p.request += guidV;
 
     var requestId = 0;
-
     queryService(p.request+ p.guidPrefix+requestId++, p.url, requestHandler, function(){error("Connection error");});
 
     function smartServerRequest(){}

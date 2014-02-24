@@ -261,11 +261,8 @@ ailab.kiv.pageViewer = function(p){
                 circle.on("mousedown", rightAction);
                 triangle.on("mousedown", rightAction);
 
-                function rightAction(){
-                    if(d['children'] || d['_children'] ){ //If children exist - swaping children
-                        expandOrCollapseChildren(d);
-                        paintAll();
-                    } else rightActionForObjectProperty(d); // else trying to execute right action
+                function rightAction() {
+                    invokeRightAction(d, function (d) { rightActionForObjectProperty(d); });
                 }
             }
 
@@ -283,14 +280,11 @@ ailab.kiv.pageViewer = function(p){
                 }
                 //right ear
                 if (!d.error) {
-                    rightEar = createEar(d, d3This, 0 , -(leftRightHeight / 2) + 1, halfWidth + p.buttonWidth ,
-                        leftRightHeight, uiElement, function(){
-                            if(d['children'] || d['_children'] ){ //If children exist - swaping children
-                                expandOrCollapseChildren(d);
-                                paintAll();
-                            } else rightActionForInstance(d); // else trying to execute right action
-                        } ,
-                        (d.children)?"M5,-5L-5,0L5,5":"M-5,-5L-5,5L5,0", (d.children)?(halfWidth+(p.buttonWidth-4)/2):(halfWidth+(p.buttonWidth)/2));
+                    rightEar = createEar(d, d3This, 0 , -(leftRightHeight / 2) + 1, halfWidth + p.buttonWidth,
+                        leftRightHeight, uiElement, function() {
+                            invokeRightAction(d, function (d) { rightActionForInstance(d); });
+                        }, (d.children) ? "M5,-5L-5,0L5,5" : "M-5,-5L-5,5L5,0",
+                        (d.children) ? (halfWidth+(p.buttonWidth-4)/2) : (halfWidth+(p.buttonWidth)/2));
                 }
                 //render main element after ears
                 uiElement.render(d3This, -halfWidth, -leftRightHeight / 2, p.nodeWidth-p.nodeDif);
@@ -319,6 +313,18 @@ ailab.kiv.pageViewer = function(p){
                         item.on('mouseover', function () { ear.transition().duration(p.animdur).attr("opacity",1);});
                         item.on('mouseout', function () { ear.transition().duration(p.animdur).attr("opacity",0);});
                     }
+                }
+            }
+
+            function invokeRightAction(d, rightActionHandler) {
+                var isExpanded = d['children'], hasCollapsedChildren = d['_children'];
+                var isLoadingError = d.pageRequest && d.pageRequest.isFailed;
+                if (isExpanded || !isLoadingError && hasCollapsedChildren) {
+                    expandOrCollapseChildren(d);
+                    paintAll();
+                } else {
+                    d['_children'] = false;
+                    rightActionHandler(d);
                 }
             }
 
@@ -459,7 +465,7 @@ ailab.kiv.pageViewer = function(p){
     function rightActionForInstance(d){
         var indicatorModel = fillModelForIndicator();
         d.children = [indicatorModel];
-        requestForObjPropPage(d, 1, renderParams.pageLimitForObjectProperties, indicatorModel);
+        d.pageRequest = requestForObjPropPage(d, 1, renderParams.pageLimitForObjectProperties, indicatorModel);
         paintAll();
     }
 
@@ -467,7 +473,7 @@ ailab.kiv.pageViewer = function(p){
     function rightActionForObjectProperty(d) {
         var indicatorModel = fillModelForIndicator();
         d.children = [indicatorModel];
-        requestForInstances(d, 1, renderParams.pageLimitForInstances, indicatorModel);
+        d.pageRequest = requestForInstances(d, 1, renderParams.pageLimitForInstances, indicatorModel);
         paintAll();
     }
 
@@ -601,7 +607,7 @@ ailab.kiv.pageViewer = function(p){
     }
 
     function willBeDiscarded(model) {
-        if (model.type == elementTypes.paginator) { return false; }
+        if (model.type != elementTypes.instance && model.type != elementTypes.objProperty) { return false; }
         return model.parent && model.parent.pageRequest &&
             (model.parent.pageRequest.isRunning || model.parent.pageRequest.isFailed);
     }
@@ -624,7 +630,7 @@ ailab.kiv.pageViewer = function(p){
                     indicator.remove();
                     var indicatorModel = fillModelForIndicator();
                     mainRoot.children = [indicatorModel];
-                    requestForObjPropPage(mainRoot, 1, renderParams.pageLimitForObjectProperties, indicatorModel);
+                    mainRoot.pageRequest = requestForObjPropPage(mainRoot, 1, renderParams.pageLimitForObjectProperties, indicatorModel);
                     paintAll();
                     zoomer.translate(-mainRoot.y+ p.nodeWidth/2, -mainRoot.x+h/2);
                 } catch (e) {
@@ -798,8 +804,9 @@ instance type = {
     ui,              Ui field if expanded is false
     uiExpanded,      Ui field if expanded is true
     dpLoaded,        If data properties were not loaded - it is false, else it is true
-    pageRequest      Not null if there was a request for loading children object properties page.
-    pageIndicator    Children's page loading indicator instance.
+    dataIndicator    Data properties loading indicator **model**.
+    pageRequest      Not null if there was a request for loading children object properties.
+    pageIndicator    Children's page loading indicator **instance**.
     wasDiscarded     Instance was discarded by loading another page within it's parent.
     type: "instance"
 }
@@ -812,7 +819,7 @@ objProperty type = {
     children*[],          Children are forming tree structure. * - is needed for d3
     direction,            "IN" or "OUT"
     ui,                   Field of ui related structures. Needed to calc height for example.
-    pageRequest           Not null if there was a request for loading children instances page.
+    pageRequest           Not null if there was a request for loading children instances.
     pageIndicator         Children's page loading indicator instance.
     type: "objProperty"
 }
