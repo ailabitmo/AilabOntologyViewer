@@ -126,7 +126,7 @@ ailab.kiv.pageViewer = function(p){
     }
 
     //paint function. Should be invoked each time when something changes in representation
-    function paintAll(){
+    function paintAll() {
         var nodes = tree.nodes(mainRoot);
         var links = tree.links(nodes);
 
@@ -181,10 +181,16 @@ ailab.kiv.pageViewer = function(p){
                     var thisItem = d3.select(this);
                     if (d.type == elementTypes.paginator)   { updatePaginator(d, thisItem); }
                     else if (d.type == elementTypes.loader) { updateLoader(d, thisItem); }
-                    else {
+                    else if (d.type == elementTypes.objProperty) {
                         thisItem.text('');
-                        if (d.type == elementTypes.objProperty) paintObjProperty(d, thisItem);
-                        else if (d.type == elementTypes.instance) paintInstance(d, thisItem);
+                        paintObjProperty(d, thisItem);
+                    } else if (d.type == elementTypes.instance) {
+                        if (d.dataIndicator && d.dataIndicator.ui) {
+                            d.dataIndicator.ui.remove();
+                            d.dataIndicator.ui = null;
+                        }
+                        thisItem.text('');
+                        paintInstance(d, thisItem);
                     }
                     if (d.pageIndicator) { arrangePageIndicator(d, d.pageIndicator); }
                 });
@@ -333,7 +339,7 @@ ailab.kiv.pageViewer = function(p){
         }
 
         //painting links
-        function paintLinks(){
+        function paintLinks() {
             var forLinks = formD3ChainCalls(panel, "g#linkers"+graphId+"|id'linkers"+graphId);
             var update = forLinks.selectAll(".link").data(links, function (d) {return d.source.uniqueId + "_" + d.target.uniqueId;});
             var enter = update.enter();
@@ -391,8 +397,8 @@ ailab.kiv.pageViewer = function(p){
         classesString = classesString.substr(0, classesString.length-2);
 
         var lContainerContents = ui.SimpleText({text: d.name,textClass: "basicTextInGraph",vertMargin: 5});
-        if(expanded){ //if an item is expanded
-            if(!indicatorText){ // if data properties are loaded
+        if (expanded){ //if an item is expanded
+            if (!indicatorText){ // if data properties are loaded
                 var dataProps = [{left: "отсутствуют", right: ""}];
                 if (containsInObj(d, "dataProps") && d.dataProps.length>0) {
                     dataProps = [];
@@ -405,9 +411,22 @@ ailab.kiv.pageViewer = function(p){
                 lContainerContents = ui.LayoutContainer1(
                     {upperText: lContainerContents, lowerText: text, lineFill: d.color, lineSize: 2, vertMargin: 6});
             } else { //if data properties are not loaded and indicator should be placed
-                lContainerContents =ui.LayoutContainer1(
-                    {upperText: ui.SimpleText({text: d.name,textClass: "basicTextInGraph",vertMargin: 5}),
-                        lowerText: ui.SimpleText({text: indicatorText,textClass: "basicTextInGraph",vertMargin: 5}), lineFill: d.color, lineSize: 2, vertMargin: 6});
+                var indicatorSize = 25, margin = {top: 8, bottom: 0, left: 0, right: 0};
+                lContainerContents = ui.LayoutContainer1({
+                    lineFill: d.color,
+                    upperText: ui.SimpleText({text: d.name, textClass: "basicTextInGraph", vertMargin: 5}),
+                    lowerText: {
+                        height: function () { return indicatorSize + margin.top + margin.bottom; },
+                        render: function (parent, x, y, width) {
+                            d.dataIndicator.status(indicatorText);
+                            d.dataIndicator.ui = Indicator.create(parent, {size: indicatorSize,
+                                position: vector(x + margin.left + indicatorSize / 2, y + margin.top + indicatorSize / 2),
+                                maxWidth: Math.max(0, width - margin.left - margin.right - indicatorSize / 2)});
+                            updateIndicatorUI(d.dataIndicator);
+                            d.dataIndicator.ui.run();
+                        }
+                    }
+                });
             }
         }
 
@@ -455,7 +474,10 @@ ailab.kiv.pageViewer = function(p){
     //Generate function which will be invoked if clicked on center of instance element
     function centerAction(d){
         return function () {
-            if (!d.dpLoaded) requestForDataProperties(d, d.uiExpanded);
+            if (!d.dpLoaded) {
+                d.dataIndicator = fillModelForIndicator();
+                requestForDataProperties(d, d.dataIndicator);
+            }
             d.expanded = !d.expanded;
             paintAll();
         };
@@ -506,7 +528,7 @@ ailab.kiv.pageViewer = function(p){
         instance.class.sort();
         instance.color = classColorGetter.getSomeObjectColor(instance.class);
         instance.expanded = false;
-        instance.ui = fillInstanceUI(instance,false); //collapsed version in ui
+        instance.ui = fillInstanceUI(instance, false); //collapsed version in ui
         if(hasDataProps) instance.uiExpanded = fillInstanceUI(instance, true, null); //expanded version in uiExpanded, before request, it should be indicator
         else instance.uiExpanded = fillInstanceUI(instance, true, "Loading..."); //expanded version in uiExpanded, before request, it should be indicator
         instance.dpLoaded = hasDataProps;
@@ -532,6 +554,7 @@ ailab.kiv.pageViewer = function(p){
             type: elementTypes.loader,
             info: text,
             isErrorOccurred: false,
+            isRemoved: false,
             status: function (text) {
                 this.info = text;
                 updateIndicatorUI(this);
@@ -540,7 +563,10 @@ ailab.kiv.pageViewer = function(p){
                 this.isErrorOccurred = true;
                 updateIndicatorUI(this);
             },
-            remove: function () {}
+            remove: function () {
+                this.isRemoved = true;
+                updateIndicatorUI(this);
+            }
         };
     }
 
@@ -551,6 +577,8 @@ ailab.kiv.pageViewer = function(p){
                 ui.status(indicatorModel.info);
             if (indicatorModel.isErrorOccurred)
                 ui.error();
+            if (indicatorModel.isRemoved)
+                ui.remove();
         }
     }
 
@@ -715,7 +743,7 @@ ailab.kiv.pageViewer = function(p){
         var request = kiv.smartServerRequest({
             request: renderParams.sparqlEndpoint+"$instanceInfoWithDP.InstanceInfoWithDPRequest$"+element.id,
             url: renderParams.service,
-            waitHandler: function(d) { /*indicator.status(d);*/ },
+            waitHandler: function(d) { indicator.status(d); },
             finishHandler: function(d) {
                 try {
                     var result = (eval('(' + d + ')'));
@@ -723,15 +751,15 @@ ailab.kiv.pageViewer = function(p){
                     var newInstance = fillModelForInstance(result.request,true);
                     element.uiExpanded = newInstance.uiExpanded;
                     element.dpLoaded = newInstance.dpLoaded;
-//                    indicator.remove();
+                    indicator.remove();
                     paintAll();
                 } catch (e) {
                     this.errorHandler(e);
                 }
             },
             errorHandler: function(d) {
-//                indicator.error();
-//                indicator.status(d);
+                indicator.error();
+                indicator.status(d);
             },
             interval: renderParams.interval
         });

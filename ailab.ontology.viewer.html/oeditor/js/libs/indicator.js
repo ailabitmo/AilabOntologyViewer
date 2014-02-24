@@ -103,12 +103,14 @@ var Indicator = {
         var time =  Indicator.instances.length > 0 ? Indicator.instances[0].clock.time() : 0;
         var clock = this.clock = ReferenceClock.create(this.animation).run(duration, time);
         var startAngle = d3.ease("cubic-in-out")(time) * 360;
-        arrow.transition()
-            .duration(duration * (1 - time))
-            .ease(resumedEase(time))
-            .attrTween("transform", function () {
-                return d3.interpolateString("rotate(" + startAngle + ")", "rotate(360)");
-            }).each("end", rotateArrow);
+        if (!this.isErrorOccurred) {
+            arrow.transition()
+                .duration(duration * (1 - time))
+                .ease(resumedEase(time))
+                .attrTween("transform", function () {
+                    return d3.interpolateString("rotate(" + startAngle + ")", "rotate(360)");
+                }).each("end", rotateArrow);
+        }
         var self = this;
         function rotateArrow() {
             if (self.isErrorOccurred) { return; }
@@ -125,8 +127,7 @@ var Indicator = {
     remove: function () {
         if (!this.animation) { return; }
         var index = Indicator.instances.indexOf(this);
-        if (index >= 0)
-            Indicator.instances.splice(index, 1);
+        if (index >= 0) { Indicator.instances.splice(index, 1); }
         this.parent.node().removeChild(this.animation.node());
         this.animation = null;
     },
@@ -137,6 +138,8 @@ var Indicator = {
             _razeText(this.text, this.statusText ? this.statusText : "", "", maxTextwidth, ti, null, svgui.Tooltip.instance);
         }
         if (this.animation && this.isErrorOccurred) {
+            var index = Indicator.instances.indexOf(this);
+            if (index >= 0) { Indicator.instances.splice(index, 1); }
             this.arrowPath.attr("stroke", "red");
             this.arrowPath.attr("d", this.arrowPath.attr("d") + "M-8,-8L8,8M-8,8L8,-8");
         }
