@@ -73,6 +73,11 @@ var Indicator = {
         if (this.animation)
             this.animation.attr("display", isVisible ? null : "none");
     },
+    moveTo: function (position) {
+        this.position = position;
+        if (this.animation)
+            this.animation.attr("transform", "translate(" + this.position.x + "," + this.position.y + ")");
+    },
     /**
      * Добавляет анимацию ожидания.
      * @param svg - селектор SVG-элемента
