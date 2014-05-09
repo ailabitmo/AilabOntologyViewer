@@ -106,18 +106,18 @@ public class ObjPropsPageViewBuilder extends AStartSequenceModelBuilder<ObjProps
         String query = DEFAULT_PREFIX;
         try {
             if (reqId.getDirection() == Direction.IN)
-                query = "select (COUNT(distinct ?objProperty) AS ?count ) where {\n" +
+                query += "select (COUNT(distinct ?objProperty) AS ?count ) where {\n" +
                         "{ _:b ?objProperty  <" + reqId.getIdOfInstance() + ">.\n" +
                         "     ?objProperty a owl:ObjectProperty.}\n" +
                         "}";
             else if (reqId.getDirection() == Direction.OUT)
-                query = "select (COUNT(distinct ?objProperty) AS ?count ) where {\n" +
+                query += "select (COUNT(distinct ?objProperty) AS ?count ) where {\n" +
                         "{ <" + reqId.getIdOfInstance() + "> ?objProperty _:a.\n" +
                         "     ?objProperty a owl:ObjectProperty.}\n" +
                         "}";
 
             else if (reqId.getDirection() == Direction.BOTH)
-                query = "select (COUNT(distinct ?objProperty) AS ?count ) where {\n" +
+                query += "select (COUNT(distinct ?objProperty) AS ?count ) where {\n" +
                         "{ _:b ?objProperty  <" + reqId.getIdOfInstance() + ">.\n" +
                         "     ?objProperty a owl:ObjectProperty.}\n" +
                         " UNION \n" +
