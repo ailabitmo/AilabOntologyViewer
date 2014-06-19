@@ -6,9 +6,12 @@ import ru.ifmo.ailab.ontology.viewer.base.imp.pageViewer.ResponseContext;
 import ru.ifmo.ailab.ontology.viewer.base.interfaces.IResponseModel;
 import ru.ifmo.ailab.ontology.viewer.base.utils.LoggerWrapper;
 import ru.ifmo.ailab.ontology.viewer.base.utils.MainOntoCache;
+import ru.ifmo.ailab.ontology.viewer.exceptions.ProcessingException;
+import ru.ifmo.ailab.ontology.viewer.servlets.IRequestParams;
 import ru.spb.kpit.kivan.Networking.Crawler.Model.ItemWithId;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 
 /**
  * IDEA
@@ -37,25 +40,23 @@ public abstract class ARequest<A extends AResponse> extends ItemWithId {
 
     protected abstract A makeRequest();
 
-    protected abstract void init(String stringParams);
+    protected abstract void init(IRequestParams params);
 
     protected abstract String getRequestStringDescription();
 //-----------------STATIC-------------
-    final static String packagePrefix = ARequest.class.getPackage().getName()+".";
-    public static ARequest getRequest(String input){
-        //Format for context: className(if packagePrefix is not root, then package.class should be used)$parameters
-        String requestCls = input.substring(0,input.indexOf("$"));
-        requestCls = packagePrefix+requestCls;
+    final static String packagePrefix = ARequest.class.getPackage().getName() + ".";
+
+    public static ARequest getRequest(IRequestParams params) {
+        String requestCls = packagePrefix + params.getString("requestType");
         try {
             Class cls = Class.forName(requestCls);
             Constructor c = cls.getConstructor();
             ARequest request = (ARequest) c.newInstance();
-            request.init(input.substring(input.indexOf("$")+1));
+            request.init(params);
             return request;
         } catch (Exception e) {
-            logger.error(e);
+            throw new ProcessingException(e);
         }
-        return null;
     }
 
     protected static LoggerWrapper logger = LoggerWrapper.getLogger(ARequest.class);

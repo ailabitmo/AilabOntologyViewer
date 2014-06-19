@@ -8,12 +8,7 @@ package ru.ifmo.ailab.ontology.viewer.base.interfaces;
  *
  * %%% Пустая модель запроса
  */
-public class EmptyRequestAndContextModel implements IRequestAndContextModel<EmptyRequestAndContextModel> {
-    @Override
-    public EmptyRequestAndContextModel init(String stringParams) {
-        return this;
-    }
-
+public class EmptyRequestAndContextModel implements IRequestAndContextModel {
     @Override
     public String getRequestStringDescription() {
         return "Нет";

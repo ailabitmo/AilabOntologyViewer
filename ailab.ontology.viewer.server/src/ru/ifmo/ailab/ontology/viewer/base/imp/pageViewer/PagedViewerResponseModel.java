@@ -8,21 +8,20 @@ import ru.ifmo.ailab.ontology.viewer.base.interfaces.IResponseModel;
  * : 06.02.14
  * : 7:50
  */
-public class PagedViewerResponseModel implements IResponseModel<PagedViewerResponseModel,String> {
-    String toRet = "";
+public class PagedViewerResponseModel implements IResponseModel {
+    private String returnValue;
+
+    public PagedViewerResponseModel(String returnValue) {
+        this.returnValue = returnValue;
+    }
+
     @Override
     public String getResponseString() {
-        return toRet;
+        return returnValue;
     }
 
     @Override
     public String getResponseStringDescription() {
         return "Response is an object which contains 4 objects: class, dataProps, object props infos and particular request result";
-    }
-
-    @Override
-    public PagedViewerResponseModel init(String a) {
-        toRet = a;
-        return this;
     }
 }

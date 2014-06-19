@@ -12,9 +12,13 @@ import ru.ifmo.ailab.ontology.viewer.base.interfaces.IResponseModel;
  *
  * %%% Модель ответа для просмотровщика
  */
-public class ViewerResponseModel implements IResponseModel<ViewerResponseModel,UtilStructures> {
+public class ViewerResponseModel implements IResponseModel {
 
-    UtilStructures toRet;
+    private UtilStructures toRet;
+
+    public ViewerResponseModel(UtilStructures a) {
+        this.toRet = a;
+    }
 
     public String getResponseString() {
         if(toRet==null) return "";
@@ -30,10 +34,5 @@ public class ViewerResponseModel implements IResponseModel<ViewerResponseModel,U
 
     public String getResponseStringDescription() {
         return "Модель в JSON, которая требуется редактору для построения картинки";
-    }
-
-    public ViewerResponseModel init(UtilStructures a) {
-        this.toRet = (UtilStructures) a;
-        return this;
     }
 }

@@ -18,7 +18,7 @@ import java.util.Map;
  * <p/>
  * %%% Модель ответа для просмотровщика
  */
-public class ResponseContext implements IResponseModel<ResponseContext, JSONSerializable>, IResponseCache {
+public class ResponseContext implements IResponseModel, IResponseCache {
     //----------------Classes, data properties and object properties which
     //----------------were used during request.
     Map<String, SimpleClassInfo> classesUsed = new HashMap<String, SimpleClassInfo>();
@@ -71,7 +71,6 @@ public class ResponseContext implements IResponseModel<ResponseContext, JSONSeri
         return "Response is an object which contains 4 objects: class, dataProps, object props infos and particular request result";
     }
 
-    @Override
     public ResponseContext init(JSONSerializable a) {
         finalObject = a;
         return this;

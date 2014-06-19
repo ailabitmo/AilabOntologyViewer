@@ -5,11 +5,35 @@
 		  http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
            version="2.5">
     <servlet>
-        <servlet-name>OEDServlet</servlet-name>
-        <servlet-class>ru.ifmo.ailab.ontology.viewer.EditorServlet</servlet-class>
+        <servlet-name>PageViewer</servlet-name>
+        <servlet-class>ru.ifmo.ailab.ontology.viewer.servlets.PageViewerServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>RootViewer</servlet-name>
+        <servlet-class>ru.ifmo.ailab.ontology.viewer.servlets.RootViewerServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>Mirror</servlet-name>
+        <servlet-class>ru.ifmo.ailab.ontology.viewer.servlets.MirrorServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>Help</servlet-name>
+        <servlet-class>ru.ifmo.ailab.ontology.viewer.servlets.HelpServlet</servlet-class>
     </servlet>
     <servlet-mapping>
-        <servlet-name>OEDServlet</servlet-name>
-        <url-pattern>/aov/*</url-pattern>
+        <servlet-name>PageViewer</servlet-name>
+        <url-pattern>/aov/pageviewer/*</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>RootViewer</servlet-name>
+        <url-pattern>/aov/rootviewer/*</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>Mirror</servlet-name>
+        <url-pattern>/aov/mirror/</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>Help</servlet-name>
+        <url-pattern>/aov/help/*</url-pattern>
     </servlet-mapping>
 </web-app>

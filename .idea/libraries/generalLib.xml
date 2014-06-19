@@ -4,6 +4,8 @@
       <root url="jar://$PROJECT_DIR$/lib/generalLib.jar!/" />
     </CLASSES>
     <JAVADOC />
-    <SOURCES />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/lib/generalLib-src.zip!/" />
+    </SOURCES>
   </library>
 </component>

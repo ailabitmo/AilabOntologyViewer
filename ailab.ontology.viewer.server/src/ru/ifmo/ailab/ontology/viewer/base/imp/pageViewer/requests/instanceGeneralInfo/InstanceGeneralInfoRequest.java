@@ -4,6 +4,7 @@ import ru.ifmo.ailab.ontology.viewer.base.imp.pageViewer.ontoModel.modelBuilders
 import ru.ifmo.ailab.ontology.viewer.base.imp.pageViewer.ontoModel.models.classInfo.SimpleClassInfo;
 import ru.ifmo.ailab.ontology.viewer.base.imp.pageViewer.ontoModel.models.ontoObj.SimpleOntoObject;
 import ru.ifmo.ailab.ontology.viewer.base.imp.pageViewer.requests.ARequest;
+import ru.ifmo.ailab.ontology.viewer.servlets.IRequestParams;
 
 /**
  * IDEA
@@ -14,25 +15,23 @@ import ru.ifmo.ailab.ontology.viewer.base.imp.pageViewer.requests.ARequest;
  * Request for info about info of only one element.
  */
 public class InstanceGeneralInfoRequest extends ARequest<InstanceGeneralInfoResponse> {
-
-    String id;
+    private String id;
 
     @Override
     protected InstanceGeneralInfoResponse makeRequest() {
-        context.waitMessage("Initing...");
+        //context.waitMessage("Initing...");
         try {
             SimpleOntoObject sci = (SimpleOntoObject) AModelBuilder.buildModel(SimpleOntoObject.class, context, id);
             return new InstanceGeneralInfoResponse(sci);
         } catch (Exception e) {
-            context.errorOccured(e);
+            //context.errorOccured(e);
         }
         return new InstanceGeneralInfoResponse(null);
     }
 
     @Override
-    public void init(String stringParams) {
-        //
-        this.id = stringParams;
+    public void init(IRequestParams params) {
+        this.id = params.getString("idOfInstance");
     }
 
     @Override

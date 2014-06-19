@@ -10,9 +10,13 @@ import ru.ifmo.ailab.ontology.viewer.base.interfaces.IResponseModel;
  *
  * %%% Модель выхода для зеркального обработчика
  */
-public class MirrorResponseModel implements IResponseModel<MirrorResponseModel,String> {
+public class MirrorResponseModel implements IResponseModel {
 
-    String resultFromSparql;
+    private String resultFromSparql;
+
+    public MirrorResponseModel(String a) {
+        this.resultFromSparql = a;
+    }
 
     @Override
     public String getResponseString() {
@@ -22,11 +26,5 @@ public class MirrorResponseModel implements IResponseModel<MirrorResponseModel,S
     @Override
     public String getResponseStringDescription() {
         return "Строка, сформированная спарклом без изменений";
-    }
-
-    @Override
-    public MirrorResponseModel init(String a) {
-        this.resultFromSparql = (String) a;
-        return this;
     }
 }

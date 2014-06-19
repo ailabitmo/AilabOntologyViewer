@@ -5,6 +5,7 @@ import ru.ifmo.ailab.ontology.viewer.base.imp.pageViewer.ontoModel.models.ontoOb
 import ru.ifmo.ailab.ontology.viewer.base.imp.pageViewer.ontoModel.models.ontoObj.SimpleOntoObject;
 import ru.ifmo.ailab.ontology.viewer.base.imp.pageViewer.requests.ARequest;
 import ru.ifmo.ailab.ontology.viewer.base.imp.pageViewer.requests.instanceGeneralInfo.InstanceGeneralInfoResponse;
+import ru.ifmo.ailab.ontology.viewer.servlets.IRequestParams;
 
 /**
  * IDEA
@@ -13,7 +14,8 @@ import ru.ifmo.ailab.ontology.viewer.base.imp.pageViewer.requests.instanceGenera
  * : 9:46
  */
 public class InstanceInfoWithDPRequest extends ARequest<InstanceInfoWithDPResponse> {
-    String id;
+    private String id;
+
     @Override
     protected InstanceInfoWithDPResponse makeRequest() {
         context.waitMessage("Initing...");
@@ -27,8 +29,8 @@ public class InstanceInfoWithDPRequest extends ARequest<InstanceInfoWithDPRespon
     }
 
     @Override
-    protected void init(String stringParams) {
-        id = stringParams;
+    protected void init(IRequestParams params) {
+        id = params.getString("idOfInstance");
     }
 
     @Override

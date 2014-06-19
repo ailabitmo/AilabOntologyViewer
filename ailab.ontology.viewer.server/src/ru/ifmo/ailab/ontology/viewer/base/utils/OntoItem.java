@@ -9,7 +9,7 @@ package ru.ifmo.ailab.ontology.viewer.base.utils;
  * %%% Экземпляр онтологического объекта (есть лейбл)
  */
 public abstract class OntoItem extends ObjectWithId {
-    String label;
+    private String label;
 
     public OntoItem(String id) {
         super(id);

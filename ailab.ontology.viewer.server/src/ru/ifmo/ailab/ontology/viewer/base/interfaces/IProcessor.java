@@ -8,7 +8,7 @@ package ru.ifmo.ailab.ontology.viewer.base.interfaces;
  *
  * %%% Интерфейс обработчика
  */
-public interface IProcessor<REQ extends IRequestAndContextModel,RESP extends IResponseModel> {
+public interface IProcessor<REQ extends IRequestAndContextModel, RESP extends IResponseModel> {
     /**
      * Обязательно наличие конструктора по умолчанию. Всю необходимую для обработки информацию
      * процессор должен получать из инпута

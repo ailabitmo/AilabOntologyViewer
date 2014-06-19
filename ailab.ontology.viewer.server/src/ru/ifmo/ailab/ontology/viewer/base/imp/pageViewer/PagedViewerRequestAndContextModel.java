@@ -3,7 +3,10 @@ package ru.ifmo.ailab.ontology.viewer.base.imp.pageViewer;
 import com.hp.hpl.jena.sparql.engine.http.QueryEngineHTTP;
 import ru.ifmo.ailab.ontology.viewer.base.utils.LoggerWrapper;
 import ru.ifmo.ailab.ontology.viewer.base.interfaces.ARequestAndContextWithEndpoint;
+import ru.ifmo.ailab.ontology.viewer.servlets.IRequestParams;
 import ru.spb.kpit.kivan.Networking.smartrequest.InfoMessagingProvider;
+
+import java.util.Map;
 
 /**
  * IDEA
@@ -15,9 +18,9 @@ import ru.spb.kpit.kivan.Networking.smartrequest.InfoMessagingProvider;
  */
 public class PagedViewerRequestAndContextModel extends ARequestAndContextWithEndpoint<PagedViewerRequestAndContextModel> implements InfoMessagingProvider{
 
-    String[] preferedLanguages = new String[]{"ru","en",""};
+    private static final String[] preferedLanguages = { "ru", "en", "" };
 
-    String request;
+    IRequestParams requestParams;
 
     InfoMessagingProvider messenger;
 
@@ -29,19 +32,13 @@ public class PagedViewerRequestAndContextModel extends ARequestAndContextWithEnd
         this.messenger = messenger;
     }
 
-    public String getRequest() {
-        return request;
+    public IRequestParams getRequestParams() {
+        return requestParams;
     }
 
-    public void setRequest(String request) {
-        this.request = request;
-    }
-
-    @Override
-    public PagedViewerRequestAndContextModel init(String stringParams) {
-        setEndpoint(stringParams.substring(0,stringParams.indexOf("$")));
-        this.request = stringParams.substring(stringParams.indexOf("$")+1);
-        return this;
+    public PagedViewerRequestAndContextModel(IRequestParams params) {
+        setEndpoint(params.getString("endpoint"));
+        this.requestParams = params;
     }
 
     @Override
@@ -66,62 +63,21 @@ public class PagedViewerRequestAndContextModel extends ARequestAndContextWithEnd
 
     @Override
     public void errorOccured(Exception e) {
-        messenger.errorOccured(e);
+        //messenger.errorOccured(e);
     }
 
     @Override
     public void errorOccured(String errorString) {
-        messenger.errorOccured(errorString);
+        //messenger.errorOccured(errorString);
     }
 
     @Override
     public void waitMessage(String waitMessage) {
-        messenger.waitMessage(waitMessage);
+        //messenger.waitMessage(waitMessage);
     }
 
     @Override
     public void finishedMessage(String finishedMessage) {
-        messenger.finishedMessage(finishedMessage);
+        //messenger.finishedMessage(finishedMessage);
     }
-
-    /*String idOfRootInstance;
-
-    String preferedLanguage = "ru";
-
-    UtilStructures utilsAndCache ;
-
-    public String getIdOfRootInstance() {
-        return idOfRootInstance;
-    }
-
-    public void setIdOfRootInstance(String idOfRootInstance) {
-        this.idOfRootInstance = idOfRootInstance;
-    }
-
-    public UtilStructures getUtilsAndCache() {
-        return utilsAndCache;
-    }
-
-
-
-    @Override
-    public PagedViewerRequestAndContextModel init(String stringParams) {
-        utilsAndCache = new UtilStructures();
-        List<String> params = StringUtils.split(stringParams, "$");
-        setEndpoint(params.get(0));
-        setIdOfRootInstance(params.get(1));
-        if (params.size() > 2) setLogin(params.get(2));
-        if (params.size() > 3) setPassword(params.get(3));
-        return this;
-    }
-
-    @Override
-    public String getRequestStringDescription() {
-        return "format: endpoint$idOfRootInstance[$login$password] login|password - необязательные, idOfRootInstance - идентификатор корневой сущности, для которой вызывается просмотровщик";
-    }
-
-    public String getPreferedLanguage() {
-        return preferedLanguage;
-    }
-    */
 }

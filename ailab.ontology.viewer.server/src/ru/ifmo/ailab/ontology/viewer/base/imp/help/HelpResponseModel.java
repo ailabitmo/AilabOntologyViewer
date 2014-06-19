@@ -10,9 +10,13 @@ import ru.ifmo.ailab.ontology.viewer.base.interfaces.IResponseModel;
  *
  * %%% Модель ответа для вспомогательного процессора
  */
-public class HelpResponseModel implements IResponseModel<HelpResponseModel,String> {
+public class HelpResponseModel implements IResponseModel {
 
-    String helpString;
+    private String helpString;
+
+    public HelpResponseModel(String a) {
+        this.helpString = a;
+    }
 
     @Override
     public String getResponseString() {
@@ -22,11 +26,5 @@ public class HelpResponseModel implements IResponseModel<HelpResponseModel,Strin
     @Override
     public String getResponseStringDescription() {
         return "Вспомогательная информация";
-    }
-
-    @Override
-    public HelpResponseModel init(String a) {
-        this.helpString = (String) a;
-        return this;
     }
 }

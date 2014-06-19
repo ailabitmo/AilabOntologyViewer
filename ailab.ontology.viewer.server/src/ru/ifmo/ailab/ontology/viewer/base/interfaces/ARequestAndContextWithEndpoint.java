@@ -8,11 +8,11 @@ package ru.ifmo.ailab.ontology.viewer.base.interfaces;
  *
  * %%% Общая модель запроса
  */
-public abstract class ARequestAndContextWithEndpoint<REQ extends IRequestAndContextModel> implements IRequestAndContextModel<REQ> {
+public abstract class ARequestAndContextWithEndpoint<REQ extends IRequestAndContextModel> implements IRequestAndContextModel {
 
-    String endpoint;
-    String login;
-    String password;
+    private String endpoint;
+    private String login;
+    private String password;
 
     public String getEndpoint() {
         return endpoint;
@@ -37,6 +37,4 @@ public abstract class ARequestAndContextWithEndpoint<REQ extends IRequestAndCont
     public void setPassword(String password) {
         this.password = password;
     }
-
-    public abstract REQ init(String stringParams);
 }

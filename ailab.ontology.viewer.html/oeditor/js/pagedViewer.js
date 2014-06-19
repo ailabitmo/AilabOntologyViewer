@@ -619,7 +619,7 @@ ailab.kiv.pageViewer = function(p){
     function initialRootRequest() {
         var indicator = WrapIndicator.wrap(svg);
         var request = kiv.smartServerRequest({
-            request: renderParams.sparqlEndpoint+"$instanceGeneralInfo.InstanceGeneralInfoRequest$"+renderParams.idOfInstance,
+            request: "endpoint=" + renderParams.sparqlEndpoint+"&requestType=instanceGeneralInfo.InstanceGeneralInfoRequest&idOfInstance="+renderParams.idOfInstance,
             url: renderParams.service,
             waitHandler: function(d){indicator.status(d);},
             finishHandler: function(d){
@@ -651,7 +651,7 @@ ailab.kiv.pageViewer = function(p){
     function requestForObjPropPage(instance, pageNum, currentLimit, indicator) {
         indicator.status("Loading...");
         var request = kiv.smartServerRequest({
-            request: renderParams.sparqlEndpoint+"$objPropsPage.ObjPropsPageRequest$"+instance.id+"$BOTH$"+pageNum+"$"+currentLimit,
+            request: "endpoint=" + renderParams.sparqlEndpoint+"&requestType=objPropsPage.ObjPropsPageRequest&idOfInstance="+instance.id+"&direction=BOTH&pageNum="+pageNum+"&currentLimit="+currentLimit,
             url: renderParams.service,
             waitHandler: function(d) { indicator.status(d); },
             finishHandler: function(d){
@@ -693,7 +693,7 @@ ailab.kiv.pageViewer = function(p){
         var instance = objProperty.parent;
         indicator.status("Loading...");
         var request = kiv.smartServerRequest({
-            request: renderParams.sparqlEndpoint+"$instsPage.InstsPageRequest$"+instance.id+"$"+objProperty.direction+"$"+objProperty.objPropId+"$"+pageNum+"$"+currentLimit,
+            request: "endpoint="+renderParams.sparqlEndpoint+"&requestType=instsPage.InstsPageRequest&idOfInstance="+instance.id+"&direction="+objProperty.direction+"&objPropId="+objProperty.objPropId+"&pageNum="+pageNum+"&currentLimit="+currentLimit,
             url: renderParams.service,
             waitHandler: function (d) { indicator.status(d); },
             finishHandler: function(d) {
@@ -747,7 +747,7 @@ ailab.kiv.pageViewer = function(p){
     //example: http://dbpedia.org/sparql$instanceInfoWithDP.InstanceInfoWithDPRequest$http://dbpedia.org/resource/Blackmore's_Night
     function requestForDataProperties(element, indicator) {
         var request = kiv.smartServerRequest({
-            request: renderParams.sparqlEndpoint+"$instanceInfoWithDP.InstanceInfoWithDPRequest$"+element.id,
+            request: "endpoint="+renderParams.sparqlEndpoint+"&requestType=instanceInfoWithDP.InstanceInfoWithDPRequest&idOfInstance="+element.id,
             url: renderParams.service,
             waitHandler: function(d) { indicator.status(d); },
             finishHandler: function(d) {

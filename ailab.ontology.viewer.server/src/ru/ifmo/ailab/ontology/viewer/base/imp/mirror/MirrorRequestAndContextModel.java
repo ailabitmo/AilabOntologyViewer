@@ -1,5 +1,6 @@
 package ru.ifmo.ailab.ontology.viewer.base.imp.mirror;
 
+import ru.ifmo.ailab.ontology.viewer.servlets.IRequestParams;
 import ru.spb.kpit.kivan.General.Strings.StringUtils;
 import ru.ifmo.ailab.ontology.viewer.base.interfaces.ARequestAndContextWithEndpoint;
 
@@ -18,8 +19,18 @@ public class MirrorRequestAndContextModel extends ARequestAndContextWithEndpoint
     /**
      * post/get
      */
-    String typeOfRequest;
-    String sparqlRequest;
+    private String typeOfRequest;
+    private String sparqlRequest;
+
+    public MirrorRequestAndContextModel(IRequestParams params) {
+        setEndpoint(params.getString("endpoint"));
+        setSparqlRequest(params.getString("sparqlRequest"));
+        setTypeOfRequest(params.getString("requestType"));
+        if (params.contains("login"))
+            setLogin(params.getString("login"));
+        if (params.contains("password"))
+            setPassword(params.getString("password"));
+    }
 
     public String getSparqlRequest() {
         return sparqlRequest;
@@ -35,18 +46,6 @@ public class MirrorRequestAndContextModel extends ARequestAndContextWithEndpoint
 
     public void setTypeOfRequest(String typeOfRequest) {
         this.typeOfRequest = typeOfRequest;
-    }
-
-    @Override
-    public MirrorRequestAndContextModel init(String stringParams) {
-        List<String> params = StringUtils.split(stringParams, "$");
-        setEndpoint(params.get(0));
-        setSparqlRequest(params.get(1));
-        setTypeOfRequest(params.get(2));
-        if(params.size()>3) setLogin(params.get(3));
-        if(params.size()>4) setPassword(params.get(4));
-
-        return this;
     }
 
     @Override

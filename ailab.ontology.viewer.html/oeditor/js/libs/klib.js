@@ -778,10 +778,9 @@ kiv.smartServerRequest = function(params){
     var guidD = guid();
     var guidV = p.guidPrefix+ guidD;
     var lasWaitResponse=null;
-    p.request += guidV;
 
     var requestId = 0;
-    queryService(p.request+ p.guidPrefix+requestId++, p.url, requestHandler, function(){error("Connection error");});
+    queryService(p.request, p.url, requestHandler, function(){error("Connection error");});
 
     function smartServerRequest(){}
     smartServerRequest.isCancelled = false;
@@ -789,7 +788,7 @@ kiv.smartServerRequest = function(params){
     smartServerRequest.isFailed = false;
     smartServerRequest.cancel = function(){
         this.isCancelled = true;
-        queryService(p.cancelPrefix + guidV + p.guidPrefix+requestId++, p.url, requestHandler, function(){error("Connection error");});
+        //queryService(p.cancelPrefix + guidV + p.guidPrefix+requestId++, p.url, requestHandler, function(){error("Connection error");});
     };
     smartServerRequest.getGuid = function(){return guidD;};
     return smartServerRequest;
@@ -799,22 +798,7 @@ kiv.smartServerRequest = function(params){
             finish(null);
             return;
         }
-        if (serverResponse==null || serverResponse == "") error("Server sent no response");
-        if (serverResponse.indexOf(p.waitPrefix)==0) {
-            var response = serverResponse.substring(p.waitPrefix.length);
-            if(lasWaitResponse==null || lasWaitResponse!=response){
-                lasWaitResponse = response;
-                p.waitHandler(response);
-            }
-            setTimeout(
-                function(){
-                    if(!smartServerRequest.isCancelled)
-                        queryService(p.request+ p.guidPrefix+requestId++, p.url, requestHandler, function(){error("Connection error");});
-                }, p.interval
-            );
-        } else if (serverResponse.indexOf(p.finishPrefix)==0) finish(serverResponse.substring(p.finishPrefix.length));
-        else if (serverResponse.indexOf(p.errorPrefix)==0) error(serverResponse.substring(p.errorPrefix.length));
-        else error("Unknown response signature");
+        finish(serverResponse);
     }
 
     function error(message) {

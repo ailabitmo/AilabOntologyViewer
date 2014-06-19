@@ -6,6 +6,7 @@ import ru.ifmo.ailab.ontology.viewer.base.imp.pageViewer.ontoModel.models.pageVi
 import ru.ifmo.ailab.ontology.viewer.base.imp.pageViewer.ontoModel.models.pageView.PagRequestToObjPropsOfInst;
 import ru.ifmo.ailab.ontology.viewer.base.imp.pageViewer.ontoModel.models.pageView.PageInfoByPage;
 import ru.ifmo.ailab.ontology.viewer.base.imp.pageViewer.requests.ARequest;
+import ru.ifmo.ailab.ontology.viewer.servlets.IRequestParams;
 import ru.spb.kpit.kivan.General.Strings.StringUtils;
 
 import java.util.List;
@@ -17,7 +18,7 @@ import java.util.List;
  * : 9:54
  */
 public class ObjPropsPageRequest extends ARequest<ObjPropsPageResponse> {
-    PagRequestToObjPropsOfInst requestModel;
+    private PagRequestToObjPropsOfInst requestModel;
 
     @Override
     protected ObjPropsPageResponse makeRequest() {
@@ -32,13 +33,13 @@ public class ObjPropsPageRequest extends ARequest<ObjPropsPageResponse> {
     }
 
     @Override
-    protected void init(String stringParams) {
-        List<String> params = StringUtils.split(stringParams, "$");
+    protected void init(IRequestParams params) {
         requestModel = new PagRequestToObjPropsOfInst(
-                params.get(0),
-                new PageInfoByPage(Integer.parseInt(params.get(2)), Integer.parseInt(params.get(3))),
-                Direction.valueOf(params.get(1))
-        );
+            params.getString("idOfInstance"),
+            new PageInfoByPage(
+                params.getInteger("pageNum"),
+                params.getInteger("currentLimit")),
+            Direction.valueOf(params.getString("direction")));
     }
 
     @Override
