@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+    <title>Joint Ontology Diagram</title>
+    <link rel="stylesheet" href="../js/joint/joint.css">
+</head>
+<body>
+
+    <!--General libs-->
+    <script src="../js/libs/d3.v3.js"></script>
+    <script src="../js/libs/jquery-2.0.2.js"></script>
+    <script src="../js/libs/uuid.js?112"></script>
+    <!--My libs-->
+    <script src="../js/libs/primitives.js"></script>
+    <script src="../js/libs/klib.js"></script>
+    <script src="../js/libs/indicator.js"></script>
+    <!--Main code-->
+    <script src="../js/joint/joint.js"></script>
+    <script src="../js/libs/svgui.js"></script>
+    <script src="../js/joint-test.js"></script>
+
+    <div id='chart'></div>
+
+    <script>
+        var diagram;
+        $(document).ready(function () {
+            diagram = new JointTest.Diagram(
+                document.getElementById('chart'),
+                "http://localhost:8080/aov/pageviewer/",
+                "http://dbpedia.org/sparql",
+                "http://dbpedia.org/resource/Blackmore's_Night");
+        });
+    </script>
+</body>
+</html>
