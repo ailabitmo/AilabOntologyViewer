@@ -171,9 +171,7 @@ module Ontology {
         /** ROOT of the tree */
         private mainRoot: any;
 
-        private tree = d3.layout.tree()
-            .nodeSize([1, this.nodeWidth])
-            .separation((a, b) => this.separationFunc(<any>a, <any>b));
+        private tree: D3.Layout.TreeLayout;
         private diagonal = d3.svg.diagonal().projection(function (d) {
             return [d.y, d.x];
         });
@@ -196,6 +194,9 @@ module Ontology {
         constructor(width?: number, height?: number) {
             if (width) { this.w = width; }
             if (height) { this.h = height; }
+            this.tree = d3.layout.tree()
+                .nodeSize([1, this.nodeWidth])
+                .separation((a, b) => this.separationFunc(<any>a, <any>b));
         }
 
         render(container: HTMLElement, idOfInstance: string, sparqlEndpoint: string, service: string) {
@@ -211,7 +212,7 @@ module Ontology {
                 .attr("pointer-events", "all");
 
             var zoomPart = formD3ChainCalls(this.svg, "g#zoom_part" + this.graphId + "|id'zoom_part" + this.graphId);
-            this.zoomer = kiv.zoomingArea(this.w, this.h, zoomPart, 'white', [0.6, 2], d3.rgb(252,252,252).toString());
+            this.zoomer = kiv.zoomingArea(this.w, this.h, zoomPart, 'white', [0.6, 2], d3.rgb(252, 252, 252).toString());
             this.zoomer.getOuterGroup().on("dblclick.zoom", null);
             this.panel = this.zoomer.getZoomingGroup();
 
@@ -298,18 +299,18 @@ module Ontology {
             }).style('opacity',0);
 
             exit.filter(function (d) { return !d.target.wasDiscarded; })
-                .transition().duration(this.animdur).attr("d", function (d) {
+                .transition().duration(this.animdur).attr("d", (d) => {
                     var o = {x: d.target.x, y: d.target.y};
                     return this.diagonal({source: o, target: o});
                 }).style('opacity', 0).remove();
             exit.filter(function (d) { return d.target.wasDiscarded; }).remove();
 
-            update.transition().duration(function (d) { return willBeDiscarded(d.target) ? this.discardAnimDuration : this.animdur; })
-                .attr("d", function (d) {
+            update.transition().duration((d) => { return willBeDiscarded(d.target) ? this.discardAnimDuration : this.animdur; })
+                .attr("d", (d) => {
                     /// !!!!! X and Y are inverted here!!!!!
-                    if (d.target.type == ElementType.paginator) return "M"+ d.target.y+","+ d.target.x;
+                    if (d.target.type == ElementType.paginator) return "M" + d.target.y + "," + d.target.x;
                     var m = (d.source.y + d.target.y) / 2;
-                    var halfWidth = (this.nodeWidth-this.nodeDif) / 2;
+                    var halfWidth = this.nodeInnerWidth() / 2;
                     var k = [
                         {x: d.source.x, y: d.source.y + halfWidth },  //left point
                         {x: d.source.x, y: m},                //middle left
@@ -363,8 +364,10 @@ module Ontology {
                 .transition().duration(this.animdur).style('opacity', 0).remove();
 
             update.attr('pointer-events', function (d) { return willBeDiscarded(d) ? 'none' : null; })
-                .transition().duration(function (d) { return willBeDiscarded(d) ? this.discardAnimDuration : this.animdur; })
-                .attr("transform", function (d) { return "translate(" + d.y + "," + d.x + ")";})
+                .transition().duration((d) => { return willBeDiscarded(d) ? this.discardAnimDuration : this.animdur; })
+                .attr("transform", function (d) {
+                    return "translate(" + d.y + "," + d.x + ")";
+                })
                 .style('opacity', function (d) { return willBeDiscarded(d) ? 0.2 : 1; })
                 .each(function (d) {
                     var thisItem = d3.select(this);
@@ -474,19 +477,18 @@ module Ontology {
                     (d.children) ? "M5,-5L-5,0L5,5" : "M-5,-5L-5,5L5,0",
                     (d.children) ? (halfWidth+(this.buttonWidth-4)/2) : (halfWidth+(this.buttonWidth)/2));
             }
+
+            //Changing opacity to 0 or 1
+            var onMouseElement = (opacity) => () => {
+                if (rightEar!=null) { rightEar.transition().duration(this.animdur).attr("opacity", opacity); }
+                if (leftEar != null) { leftEar.transition().duration(this.animdur).attr("opacity", opacity); }
+            };
+
             //render main element after ears
             uiElement.render(d3This, -halfWidth, -leftRightHeight / 2, this.nodeInnerWidth());
             if (!d.error) uiElement.setAction("mousedown.open", this.centerAction(d));
             uiElement.setAction("mouseover.uwi", onMouseElement(1));
             uiElement.setAction("mouseout.uwi", onMouseElement(0));
-
-            //Changing opacity to 0 or 1
-            function onMouseElement(opacity){
-                return function () {
-                    if(rightEar!=null) rightEar.transition().duration(this.animdur).attr("opacity", opacity);
-                    if (leftEar != null) leftEar.transition().duration(this.animdur).attr("opacity", opacity);
-                };
-            }
 
             //create left or right ear
             function createEar(d, d3This, x ,y, width, height, uiElement, action, path, translate){
@@ -498,8 +500,8 @@ module Ontology {
 
                 function actionSet(item){
                     item.on("mousedown", action);
-                    item.on('mouseover', function () { ear.transition().duration(this.animdur).attr("opacity",1);});
-                    item.on('mouseout', function () { ear.transition().duration(this.animdur).attr("opacity",0);});
+                    item.on('mouseover', () => { ear.transition().duration(this.animdur).attr("opacity", 1);});
+                    item.on('mouseout', () => { ear.transition().duration(this.animdur).attr("opacity", 0);});
                 }
             }
         }
@@ -556,6 +558,7 @@ module Ontology {
                         {upperText: lContainerContents, lowerText: text, lineFill: d.color, lineSize: 2, vertMargin: 6});
                 } else { //if data properties are not loaded and indicator should be placed
                     var indicatorSize = 25, margin = {top: 8, bottom: 0, left: 0, right: 0};
+                    var viewer = this;
                     lContainerContents = kiv.ui.LayoutContainer1({
                         lineFill: d.color,
                         upperText: kiv.ui.SimpleText({text: d.name, textClass: "basicTextInGraph", vertMargin: 5}),
@@ -566,7 +569,7 @@ module Ontology {
                                 d.dataIndicator.ui = Indicator.create(parent, {size: indicatorSize,
                                     position: vector(x + margin.left + indicatorSize / 2, y + margin.top + indicatorSize / 2),
                                     maxWidth: Math.max(0, width - margin.left - margin.right - indicatorSize / 2)});
-                                this.updateIndicatorUI(d.dataIndicator);
+                                viewer.updateIndicatorUI(d.dataIndicator);
                                 d.dataIndicator.ui.run();
                             },
                             setAction: function () {}
@@ -807,8 +810,8 @@ module Ontology {
                 request: "endpoint=" + this.sparqlEndpoint+"&requestType=objPropsPage.ObjPropsPageRequest&idOfInstance="+instance.id+"&direction=BOTH&pageNum="+pageNum+"&currentLimit="+currentLimit,
                 url: this.service,
                 waitHandler: function(d) { indicator.status(d); },
-                finishHandler: onError,
-                errorHandler: onFinish
+                finishHandler: onFinish,
+                errorHandler: onError
             });
             return request;
         }
@@ -840,7 +843,7 @@ module Ontology {
                     if (result.request.pageNum > 1 && children.length == 0) {
                         children.push(this.fillPaginatorModel(pageNum, currentLimit, result.request.pageNum));
                     }
-                    each(result.request.values, function (d) {
+                    each(result.request.values, (d) => {
                         children.push(this.fillModelForInstance(d, false));
                     });
                     this.paintAll();
@@ -917,7 +920,8 @@ declare var $: {
     };
 };
 
+var pageViewer: Ontology.PagedViewer;
 function startIt(containerID: string, service: string, endpoint: string, idOfInstance: string){
-    var pageViewer = new Ontology.PagedViewer($(window).width()-20, $(window).height()-20);
+    pageViewer = new Ontology.PagedViewer($(window).width()-20, $(window).height()-20);
     pageViewer.render(document.getElementById(containerID), idOfInstance, endpoint, service);
 }

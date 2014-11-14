@@ -90,9 +90,6 @@ var Ontology;
             this.h = 800;
             /** unique pageviewer id */
             this.graphId = generateUniqueId();
-            this.tree = d3.layout.tree().nodeSize([1, this.nodeWidth]).separation(function (a, b) {
-                return _this.separationFunc(a, b);
-            });
             this.diagonal = d3.svg.diagonal().projection(function (d) {
                 return [d.y, d.x];
             });
@@ -111,6 +108,9 @@ var Ontology;
             if (height) {
                 this.h = height;
             }
+            this.tree = d3.layout.tree().nodeSize([1, this.nodeWidth]).separation(function (a, b) {
+                return _this.separationFunc(a, b);
+            });
         }
         PagedViewer.prototype.render = function (container, idOfInstance, sparqlEndpoint, service) {
             this.resetState();
@@ -197,6 +197,7 @@ var Ontology;
         };
 
         PagedViewer.prototype.paintLinks = function (links) {
+            var _this = this;
             var forLinks = formD3ChainCalls(this.panel, "g#linkers" + this.graphId + "|id'linkers" + this.graphId);
             var update = forLinks.selectAll(".link").data(links, function (d) {
                 return d.source.uniqueId + "_" + d.target.uniqueId;
@@ -215,20 +216,20 @@ var Ontology;
                 return !d.target.wasDiscarded;
             }).transition().duration(this.animdur).attr("d", function (d) {
                 var o = { x: d.target.x, y: d.target.y };
-                return this.diagonal({ source: o, target: o });
+                return _this.diagonal({ source: o, target: o });
             }).style('opacity', 0).remove();
             exit.filter(function (d) {
                 return d.target.wasDiscarded;
             }).remove();
 
             update.transition().duration(function (d) {
-                return willBeDiscarded(d.target) ? this.discardAnimDuration : this.animdur;
+                return willBeDiscarded(d.target) ? _this.discardAnimDuration : _this.animdur;
             }).attr("d", function (d) {
                 /// !!!!! X and Y are inverted here!!!!!
                 if (d.target.type == 3 /* paginator */)
                     return "M" + d.target.y + "," + d.target.x;
                 var m = (d.source.y + d.target.y) / 2;
-                var halfWidth = (this.nodeWidth - this.nodeDif) / 2;
+                var halfWidth = _this.nodeInnerWidth() / 2;
                 var k = [
                     { x: d.source.x, y: d.source.y + halfWidth },
                     { x: d.source.x, y: m },
@@ -261,6 +262,7 @@ var Ontology;
         };
 
         PagedViewer.prototype.paintNodes = function (nodes) {
+            var _this = this;
             var forNodes = formD3ChainCalls(this.panel, "g#noderz" + this.graphId + "|id'noderz" + this.graphId);
             var update = forNodes.selectAll(".node").data(nodes, function (d) {
                 return "" + d.uniqueId + d.expanded;
@@ -302,7 +304,7 @@ var Ontology;
             update.attr('pointer-events', function (d) {
                 return willBeDiscarded(d) ? 'none' : null;
             }).transition().duration(function (d) {
-                return willBeDiscarded(d) ? this.discardAnimDuration : this.animdur;
+                return willBeDiscarded(d) ? _this.discardAnimDuration : _this.animdur;
             }).attr("transform", function (d) {
                 return "translate(" + d.y + "," + d.x + ")";
             }).style('opacity', function (d) {
@@ -429,22 +431,24 @@ var Ontology;
                 }, (d.children) ? "M5,-5L-5,0L5,5" : "M-5,-5L-5,5L5,0", (d.children) ? (halfWidth + (this.buttonWidth - 4) / 2) : (halfWidth + (this.buttonWidth) / 2));
             }
 
+            //Changing opacity to 0 or 1
+            var onMouseElement = function (opacity) {
+                return function () {
+                    if (rightEar != null) {
+                        rightEar.transition().duration(_this.animdur).attr("opacity", opacity);
+                    }
+                    if (leftEar != null) {
+                        leftEar.transition().duration(_this.animdur).attr("opacity", opacity);
+                    }
+                };
+            };
+
             //render main element after ears
             uiElement.render(d3This, -halfWidth, -leftRightHeight / 2, this.nodeInnerWidth());
             if (!d.error)
                 uiElement.setAction("mousedown.open", this.centerAction(d));
             uiElement.setAction("mouseover.uwi", onMouseElement(1));
             uiElement.setAction("mouseout.uwi", onMouseElement(0));
-
-            //Changing opacity to 0 or 1
-            function onMouseElement(opacity) {
-                return function () {
-                    if (rightEar != null)
-                        rightEar.transition().duration(this.animdur).attr("opacity", opacity);
-                    if (leftEar != null)
-                        leftEar.transition().duration(this.animdur).attr("opacity", opacity);
-                };
-            }
 
             //create left or right ear
             function createEar(d, d3This, x, y, width, height, uiElement, action, path, translate) {
@@ -455,12 +459,13 @@ var Ontology;
                 return ear;
 
                 function actionSet(item) {
+                    var _this = this;
                     item.on("mousedown", action);
                     item.on('mouseover', function () {
-                        ear.transition().duration(this.animdur).attr("opacity", 1);
+                        ear.transition().duration(_this.animdur).attr("opacity", 1);
                     });
                     item.on('mouseout', function () {
-                        ear.transition().duration(this.animdur).attr("opacity", 0);
+                        ear.transition().duration(_this.animdur).attr("opacity", 0);
                     });
                 }
             }
@@ -519,6 +524,7 @@ var Ontology;
                     lContainerContents = kiv.ui.LayoutContainer1({ upperText: lContainerContents, lowerText: text, lineFill: d.color, lineSize: 2, vertMargin: 6 });
                 } else {
                     var indicatorSize = 25, margin = { top: 8, bottom: 0, left: 0, right: 0 };
+                    var viewer = this;
                     lContainerContents = kiv.ui.LayoutContainer1({
                         lineFill: d.color,
                         upperText: kiv.ui.SimpleText({ text: d.name, textClass: "basicTextInGraph", vertMargin: 5 }),
@@ -532,7 +538,7 @@ var Ontology;
                                     size: indicatorSize,
                                     position: vector(x + margin.left + indicatorSize / 2, y + margin.top + indicatorSize / 2),
                                     maxWidth: Math.max(0, width - margin.left - margin.right - indicatorSize / 2) });
-                                this.updateIndicatorUI(d.dataIndicator);
+                                viewer.updateIndicatorUI(d.dataIndicator);
                                 d.dataIndicator.ui.run();
                             },
                             setAction: function () {
@@ -794,8 +800,8 @@ var Ontology;
                 waitHandler: function (d) {
                     indicator.status(d);
                 },
-                finishHandler: onError,
-                errorHandler: onFinish
+                finishHandler: onFinish,
+                errorHandler: onError
             });
             return request;
         };
@@ -829,7 +835,7 @@ var Ontology;
                         children.push(_this.fillPaginatorModel(pageNum, currentLimit, result.request.pageNum));
                     }
                     each(result.request.values, function (d) {
-                        children.push(this.fillModelForInstance(d, false));
+                        children.push(_this.fillModelForInstance(d, false));
                     });
                     _this.paintAll();
                     _this.zoomer.translate(-objProperty.y + _this.nodeWidth / 2, -objProperty.x + _this.h / 2);
@@ -905,8 +911,9 @@ var Ontology;
     Ontology.PagedViewer = PagedViewer;
 })(Ontology || (Ontology = {}));
 
+var pageViewer;
 function startIt(containerID, service, endpoint, idOfInstance) {
-    var pageViewer = new Ontology.PagedViewer($(window).width() - 20, $(window).height() - 20);
+    pageViewer = new Ontology.PagedViewer($(window).width() - 20, $(window).height() - 20);
     pageViewer.render(document.getElementById(containerID), idOfInstance, endpoint, service);
 }
 //# sourceMappingURL=ontology_navigator.js.map
