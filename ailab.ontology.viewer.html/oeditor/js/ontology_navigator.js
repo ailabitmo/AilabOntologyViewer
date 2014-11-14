@@ -57,17 +57,10 @@ var Ontology;
         ElementType[ElementType["paginator"] = 3] = "paginator";
     })(ElementType || (ElementType = {}));
 
-    var ObjPropertyDirection;
-    (function (ObjPropertyDirection) {
-        ObjPropertyDirection[ObjPropertyDirection["In"] = 0] = "In";
-        ObjPropertyDirection[ObjPropertyDirection["Out"] = 1] = "Out";
-    })(ObjPropertyDirection || (ObjPropertyDirection = {}));
-
     function willBeDiscarded(model) {
         if (model.type != 0 /* instance */ && model.type != 1 /* objProperty */) {
             return false;
         }
-
         return model.parent && model.parent.pageRequest && (model.parent.pageRequest.isRunning || model.parent.pageRequest.isFailed);
     }
 
@@ -157,7 +150,7 @@ var Ontology;
         };
 
         /**
-        * Reseting state of the tree
+        * Resetting state of the tree
         */
         PagedViewer.prototype.resetState = function () {
             this.Oclasses = {}; // known classes
@@ -361,6 +354,7 @@ var Ontology;
         };
 
         PagedViewer.prototype.arrangePageIndicator = function (parentModel, indicatorInstance) {
+            var _this = this;
             var minX = Infinity;
             var minY = Infinity, maxY = -Infinity;
             this.panel.selectAll(".node").filter(function (nodeData) {
@@ -368,7 +362,7 @@ var Ontology;
             }).each(function (d) {
                 // d.x and d.y are swapped here
                 minX = Math.min(minX, d.y);
-                var height = this.calcHeight(d);
+                var height = _this.calcHeight(d);
                 minY = Math.min(minY, d.x - height / 2);
                 maxY = Math.max(maxY, d.x + height / 2);
             });
@@ -393,7 +387,7 @@ var Ontology;
             var ti = textInfo(d.name, "basicTextInGraph");
             uiElement.render(d3This, 0 - ((ti.width / 2 >= halfWidth) ? halfWidth : ((ti.width) / 2)), 10, this.nodeInnerWidth());
 
-            var path = (d.direction == 1 /* Out */) ? "M0,-5L10,0L0,5" : "M0,-5L-10,0L0,5";
+            var path = (d.direction == "OUT") ? "M0,-5L10,0L0,5" : "M0,-5L-10,0L0,5";
             d3This.append("path").attr("d", path).attr("fill", parentInstance.color);
 
             //Circle expander
@@ -411,7 +405,7 @@ var Ontology;
 
         PagedViewer.prototype.paintInstance = function (d, d3This) {
             var _this = this;
-            var uiElement = (d.expanded) ? d.uiExpanded : d.ui;
+            var uiElement = d.expanded ? d.uiExpanded : d.ui;
             var leftRightHeight = uiElement.height(this.nodeInnerWidth());
             var halfWidth = this.nodeInnerWidth() / 2;
 
@@ -419,12 +413,12 @@ var Ontology;
             var leftEar = null;
             var rightEar = null;
             if (d.parent && !d.error) {
-                leftEar = createEar(d, d3This, -halfWidth - this.buttonWidth, -(leftRightHeight / 2) + 1, halfWidth, leftRightHeight, uiElement, this.leftAction(), "M5,-5L-5,0L5,5", -halfWidth - (this.buttonWidth) / 2);
+                leftEar = this.createEar(d, d3This, -halfWidth - this.buttonWidth, -(leftRightHeight / 2) + 1, halfWidth, leftRightHeight, uiElement, this.leftAction(), "M5,-5L-5,0L5,5", -halfWidth - (this.buttonWidth) / 2);
             }
 
             //right ear
             if (!d.error) {
-                rightEar = createEar(d, d3This, 0, -(leftRightHeight / 2) + 1, halfWidth + this.buttonWidth, leftRightHeight, uiElement, function () {
+                rightEar = this.createEar(d, d3This, 0, -(leftRightHeight / 2) + 1, halfWidth + this.buttonWidth, leftRightHeight, uiElement, function () {
                     _this.invokeRightAction(d, function (elem) {
                         _this.rightActionForInstance(elem);
                     });
@@ -449,26 +443,27 @@ var Ontology;
                 uiElement.setAction("mousedown.open", this.centerAction(d));
             uiElement.setAction("mouseover.uwi", onMouseElement(1));
             uiElement.setAction("mouseout.uwi", onMouseElement(0));
+        };
 
-            //create left or right ear
-            function createEar(d, d3This, x, y, width, height, uiElement, action, path, translate) {
-                var ear = d3This.append("g").attr("opacity", 0);
-                addBorderedRect(ear, x, y, width, height, 2, "white", uiElement.RxRy(), uiElement.RxRy(), d.color);
-                ear.append("path").attr("d", path).attr("fill", d.color).attr("transform", "translate(" + translate + ",0)");
-                actionSet(ear);
-                return ear;
-
-                function actionSet(item) {
-                    var _this = this;
-                    item.on("mousedown", action);
-                    item.on('mouseover', function () {
-                        ear.transition().duration(_this.animdur).attr("opacity", 1);
-                    });
-                    item.on('mouseout', function () {
-                        ear.transition().duration(_this.animdur).attr("opacity", 0);
-                    });
-                }
-            }
+        /**
+        * Create left or right ear
+        */
+        PagedViewer.prototype.createEar = function (d, d3This, x, y, width, height, uiElement, action, path, translate) {
+            var _this = this;
+            var addActionSet = function (item) {
+                item.on("mousedown", action);
+                item.on('mouseover', function () {
+                    ear.transition().duration(_this.animdur).attr("opacity", 1);
+                });
+                item.on('mouseout', function () {
+                    ear.transition().duration(_this.animdur).attr("opacity", 0);
+                });
+            };
+            var ear = d3This.append("g").attr("opacity", 0);
+            addBorderedRect(ear, x, y, width, height, 2, "white", uiElement.RxRy(), uiElement.RxRy(), d.color);
+            ear.append("path").attr("d", path).attr("fill", d.color).attr("transform", "translate(" + translate + ",0)");
+            addActionSet(ear);
+            return ear;
         };
 
         PagedViewer.prototype.invokeRightAction = function (d, rightActionHandler) {
@@ -548,25 +543,23 @@ var Ontology;
                 }
             }
 
-            var toRet = kiv.ui.NiceRoundRectangle({
+            return kiv.ui.NiceRoundRectangle({
                 uText: classesString,
                 lContainer: lContainerContents, color: d.color, marginX: (expanded) ? 0 : 20, marginXTop: 20, marginY: 5, borderSize: 2,
                 classUpperText: "headersInGraph"
             });
-            return toRet;
         };
 
         /**
         * Creates kiv.ui.SimpleText
         */
         PagedViewer.prototype.fillObjectPropertyUI = function (d) {
-            var toRet = kiv.ui.SimpleText({
+            return kiv.ui.SimpleText({
                 text: d.name,
                 textClass: "paragraphHeaderGraph",
                 vertMargin: 5,
                 raze: true
             });
-            return toRet;
         };
 
         /**
@@ -711,24 +704,23 @@ var Ontology;
 
         PagedViewer.prototype.expandOrCollapseChildren = function (parent) {
             if (!('_children' in parent)) {
-                parent._children = false;
+                parent['_children'] = false;
             }
-            var isCollapsed = Boolean(parent._children);
+            var isCollapsed = Boolean(parent['_children']);
             if (parent.pageIndicator) {
                 parent.pageIndicator.visible(isCollapsed);
             }
             if (isCollapsed) {
-                parent.children = parent._children;
-                parent._children = false;
+                parent.children = parent['_children'];
+                parent['_children'] = false;
             } else {
-                parent._children = parent.children;
+                parent['_children'] = parent.children;
                 parent.children = false;
             }
         };
 
         /**
         * First request which retrieves info about root element
-        * example: http://dbpedia.org/sparql$instanceGeneralInfo.InstanceGeneralInfoRequest$http://dbpedia.org/resource/Blackmore's_Night
         */
         PagedViewer.prototype.initialRootRequest = function () {
             var _this = this;
@@ -752,7 +744,7 @@ var Ontology;
                     onError(e);
                 }
             };
-            var request = kiv.smartServerRequest({
+            return kiv.smartServerRequest({
                 request: "endpoint=" + this.sparqlEndpoint + "&requestType=instanceGeneralInfo.InstanceGeneralInfoRequest&idOfInstance=" + this.idOfInstance,
                 url: this.service,
                 waitHandler: function (d) {
@@ -761,12 +753,10 @@ var Ontology;
                 finishHandler: onFinish,
                 errorHandler: onError
             });
-            return request;
         };
 
         /**
         * Request for object properties page of an instance
-        * example: http://dbpedia.org/sparql$objPropsPage.ObjPropsPageRequest$http://dbpedia.org/resource/United_States$BOTH$1$10
         */
         PagedViewer.prototype.requestForObjPropPage = function (instance, pageNum, currentLimit, indicator) {
             var _this = this;
@@ -794,7 +784,7 @@ var Ontology;
                     onError(e);
                 }
             };
-            var request = kiv.smartServerRequest({
+            return kiv.smartServerRequest({
                 request: "endpoint=" + this.sparqlEndpoint + "&requestType=objPropsPage.ObjPropsPageRequest&idOfInstance=" + instance.id + "&direction=BOTH&pageNum=" + pageNum + "&currentLimit=" + currentLimit,
                 url: this.service,
                 waitHandler: function (d) {
@@ -803,15 +793,10 @@ var Ontology;
                 finishHandler: onFinish,
                 errorHandler: onError
             });
-            return request;
         };
 
         /**
         * Request for instances of a particular object property (of a particular instance :))
-        * example: http://dbpedia.org/sparql$instsPage.InstsPageRequest$http://dbpedia.org/resource/United_States$IN$http://dbpedia.org/ontology/almaMater$1$503
-        *
-        * @param indicator {status: function(text), error: function(), remove: function()}
-        * @returns kiv.smartServerRequest object
         */
         PagedViewer.prototype.requestForInstances = function (objProperty, pageNum, currentLimit, indicator) {
             var _this = this;
@@ -845,7 +830,7 @@ var Ontology;
                     indicator.error();
                 }
             };
-            var request = kiv.smartServerRequest({
+            return kiv.smartServerRequest({
                 request: "endpoint=" + this.sparqlEndpoint + "&requestType=instsPage.InstsPageRequest&idOfInstance=" + instance.id + "&direction=" + objProperty.direction + "&objPropId=" + objProperty.objPropId + "&pageNum=" + pageNum + "&currentLimit=" + currentLimit,
                 url: this.service,
                 waitHandler: function (d) {
@@ -854,19 +839,19 @@ var Ontology;
                 finishHandler: onFinish,
                 errorHandler: onError
             });
-            return request;
         };
 
         PagedViewer.prototype.getChildren = function (parentModel) {
-            return parentModel.children || parentModel._children;
+            return parentModel.children || parentModel["_children"];
         };
 
         PagedViewer.prototype.discardPageElements = function (children, type) {
             var hasPaginator = children.length > 0 && children[0].type == 3 /* paginator */;
             if (hasPaginator) {
                 each(children, function (child) {
-                    if (child.type === type)
+                    if (child.type === type) {
                         child.wasDiscarded = true;
+                    }
                 });
             }
             children.length = hasPaginator ? 1 : 0; // keep paginator if exists
@@ -874,7 +859,6 @@ var Ontology;
 
         /**
         * Request for data properties
-        * example: http://dbpedia.org/sparql$instanceInfoWithDP.InstanceInfoWithDPRequest$http://dbpedia.org/resource/Blackmore's_Night
         */
         PagedViewer.prototype.requestForDataProperties = function (element, indicator) {
             var _this = this;
@@ -895,7 +879,7 @@ var Ontology;
                     onError(e);
                 }
             };
-            var request = kiv.smartServerRequest({
+            return kiv.smartServerRequest({
                 request: "endpoint=" + this.sparqlEndpoint + "&requestType=instanceInfoWithDP.InstanceInfoWithDPRequest&idOfInstance=" + element.id,
                 url: this.service,
                 waitHandler: function (d) {
@@ -904,7 +888,6 @@ var Ontology;
                 finishHandler: onFinish,
                 errorHandler: onError
             });
-            return request;
         };
         return PagedViewer;
     })();

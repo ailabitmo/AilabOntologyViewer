@@ -12,7 +12,7 @@ module Ontology {
      * Get either label or modified URI
      */
     function getName(uri, label) {
-        if (label && label.length>0) return label;
+        if (label && label.length > 0) return label;
         else return uri2Name(uri);
     }
 
@@ -57,7 +57,7 @@ module Ontology {
         type: ElementType;
         /** globally unique id of element to identify it */
         uniqueId: string;
-        parent?: Element;
+        parent?: AggregatingElement;
         /** Field of ui related structures. Needed to calc height for example. */
         ui?: any;
         /** Not null if there was a request for loading children  */
@@ -68,12 +68,17 @@ module Ontology {
         y?: number;
     }
 
-    interface Instance extends Element {
+    interface AggregatingElement extends Element {
+        /** [*] Children are forming tree structure. * - is needed for d3 */
+        children: Element[];
+        /** color of element */
+        color: D3.Color.Color;
+    }
+
+    interface Instance extends AggregatingElement {
         uniqueId: string;
         /** id of instance */
         id: string;
-        /** color of instance */
-        color: any;
         /** some error occured during forming instance. We do not show ears on error'd nodes */
         error: any;
         /** name of instance (label or substring of id) */
@@ -84,8 +89,6 @@ module Ontology {
         class: string[];
         /** Data property id's of instance */
         dataProps: string[];
-        /** [*] Children are forming tree structure. * - is needed for d3 */
-        children: Element[];
         /** Ui field if expanded is true */
         uiExpanded: any;
         /** If data properties were not loaded - it is false, else it is true */
@@ -97,32 +100,23 @@ module Ontology {
         label?: string;
     }
 
-    enum ObjPropertyDirection { In, Out }
-
-    interface ObjProperty extends Element {
+    interface ObjProperty extends AggregatingElement {
         uniqueId: string;
         /** id of object property */
         objPropId: string;
         /** name of object property */
         name: string;
-        /** color of object property */
-        color: D3.Color.Color;
-        /** [*] Children are forming tree structure. * - is needed for d3 */
-        children: Element[];
-        direction: ObjPropertyDirection;
+        /** property direction (either "IN" or "OUT") */
+        direction: string;
     }
 
-    interface Loader extends Element {
+    interface Loader extends Element, AbstractIndicator {
         uniqueId: string;
         /** String with information about loading */
         info: string;
         /** true if any error occured during remote request, otherwise false */
         isErrorOccurred: boolean;
         isRemoved: boolean;
-
-        error: () => void;
-        remove: () => void;
-        status: (text: string) => void;
     }
 
     interface Paginator extends Element {
@@ -137,7 +131,6 @@ module Ontology {
 
     function willBeDiscarded(model: Element) {
         if (model.type != ElementType.instance && model.type != ElementType.objProperty) { return false; }
-
         return model.parent && model.parent.pageRequest &&
             (model.parent.pageRequest.isRunning || model.parent.pageRequest.isFailed);
     }
@@ -229,7 +222,8 @@ module Ontology {
         private separationFunc(a: Element, b: Element) {
             var height1 = this.calcHeight(a);
             var height2 = this.calcHeight(b);
-            var diff = height1 / 2 + height2 / 2 + (a.parent == b.parent ? this.heightBetweenNodesOfOneParent : this.heightBetweenNodesOfDifferentParent);
+            var diff = height1 / 2 + height2 / 2 + (a.parent == b.parent
+                ? this.heightBetweenNodesOfOneParent : this.heightBetweenNodesOfDifferentParent);
             return diff;
         }
 
@@ -248,7 +242,7 @@ module Ontology {
         }
 
         /**
-         * Reseting state of the tree
+         * Resetting state of the tree
          */
         private resetState() {
             this.Oclasses = {};                // known classes
@@ -296,7 +290,7 @@ module Ontology {
             enter.append("path").attr("class", "link").attr('stroke', function (d) {
                 if (d.source.type == ElementType.instance) return d.source.color;
                 else if (d.source.type == ElementType.objProperty) return d.source.parent.color;
-            }).style('opacity',0);
+            }).style('opacity', 0);
 
             exit.filter(function (d) { return !d.target.wasDiscarded; })
                 .transition().duration(this.animdur).attr("d", (d) => {
@@ -365,9 +359,7 @@ module Ontology {
 
             update.attr('pointer-events', function (d) { return willBeDiscarded(d) ? 'none' : null; })
                 .transition().duration((d) => { return willBeDiscarded(d) ? this.discardAnimDuration : this.animdur; })
-                .attr("transform", function (d) {
-                    return "translate(" + d.y + "," + d.x + ")";
-                })
+                .attr("transform", function (d) { return "translate(" + d.y + "," + d.x + ")"; })
                 .style('opacity', function (d) { return willBeDiscarded(d) ? 0.2 : 1; })
                 .each(function (d) {
                     var thisItem = d3.select(this);
@@ -388,7 +380,7 @@ module Ontology {
                 });
         }
 
-        private createPaginator(d, parent) {
+        private createPaginator(d: Paginator, parent: D3.Selection) {
             d.ui = svgui.Paginator({parent: parent, color: d.parent.color, width: 160});
             d.ui.onPageChanged = page => { this.onPageChanged(page, d, d.parent); };
         }
@@ -418,7 +410,7 @@ module Ontology {
             var minY = Infinity, maxY = -Infinity;
             this.panel.selectAll(".node").filter(function (nodeData) {
                 return nodeData.parent === parentModel && nodeData.type != ElementType.paginator;
-            }).each(function (d) {
+            }).each((d) => {
                 // d.x and d.y are swapped here
                 minX = Math.min(minX, d.y);
                 var height = this.calcHeight(d);
@@ -445,7 +437,7 @@ module Ontology {
             var ti = textInfo(d.name, "basicTextInGraph");
             uiElement.render(d3This, 0 -( (ti.width/2>=halfWidth)?halfWidth:((ti.width)/2)), 10, this.nodeInnerWidth());
 
-            var path = (d.direction == ObjPropertyDirection.Out) ? "M0,-5L10,0L0,5" : "M0,-5L-10,0L0,5";//Triangle
+            var path = (d.direction == "OUT") ? "M0,-5L10,0L0,5" : "M0,-5L-10,0L0,5";//Triangle
             d3This.append("path").attr("d", path).attr("fill", parentInstance.color);
 
             //Circle expander
@@ -458,20 +450,20 @@ module Ontology {
         }
 
         private paintInstance(d: Instance, d3This: D3.Selection) {
-            var uiElement = (d.expanded)?  d.uiExpanded : d.ui;
+            var uiElement = d.expanded ?  d.uiExpanded : d.ui;
             var leftRightHeight = uiElement.height(this.nodeInnerWidth());
             var halfWidth = this.nodeInnerWidth() / 2;
             //If it's not root - we create left ear
             var leftEar = null;
             var rightEar = null;
             if (d.parent && !d.error){
-                leftEar = createEar(
+                leftEar = this.createEar(
                     d, d3This, -halfWidth - this.buttonWidth, -(leftRightHeight / 2) + 1, halfWidth, leftRightHeight, uiElement,
                     this.leftAction(), "M5,-5L-5,0L5,5",-halfWidth-(this.buttonWidth)/2);
             }
             //right ear
             if (!d.error) {
-                rightEar = createEar(
+                rightEar = this.createEar(
                     d, d3This, 0, -(leftRightHeight / 2) + 1, halfWidth + this.buttonWidth, leftRightHeight, uiElement,
                     () => { this.invokeRightAction(d, elem => { this.rightActionForInstance(elem); }); },
                     (d.children) ? "M5,-5L-5,0L5,5" : "M-5,-5L-5,5L5,0",
@@ -489,24 +481,27 @@ module Ontology {
             if (!d.error) uiElement.setAction("mousedown.open", this.centerAction(d));
             uiElement.setAction("mouseover.uwi", onMouseElement(1));
             uiElement.setAction("mouseout.uwi", onMouseElement(0));
-
-            //create left or right ear
-            function createEar(d, d3This, x ,y, width, height, uiElement, action, path, translate){
-                var ear = d3This.append("g").attr("opacity",0);
-                addBorderedRect(ear, x , y, width, height, 2, "white", uiElement.RxRy(), uiElement.RxRy(), d.color);
-                ear.append("path").attr("d", path).attr("fill", d.color).attr("transform","translate("+translate+",0)");
-                actionSet(ear);
-                return ear;
-
-                function actionSet(item){
-                    item.on("mousedown", action);
-                    item.on('mouseover', () => { ear.transition().duration(this.animdur).attr("opacity", 1);});
-                    item.on('mouseout', () => { ear.transition().duration(this.animdur).attr("opacity", 0);});
-                }
-            }
         }
 
-        private invokeRightAction<TElement extends Element>(d: TElement, rightActionHandler: (elem: TElement) => void) {
+        /**
+         * Create left or right ear
+         */
+        private createEar(d: Instance, d3This: D3.Selection,
+                          x: number, y: number, width: number, height: number,
+                          uiElement: any, action: (d: Instance) => void, path: string, translate: number): D3.Selection {
+            var addActionSet = (item) => {
+                item.on("mousedown", action);
+                item.on('mouseover', () => { ear.transition().duration(this.animdur).attr("opacity", 1);});
+                item.on('mouseout', () => { ear.transition().duration(this.animdur).attr("opacity", 0);});
+            };
+            var ear = d3This.append("g").attr("opacity", 0);
+            addBorderedRect(ear, x , y, width, height, 2, "white", uiElement.RxRy(), uiElement.RxRy(), d.color);
+            ear.append("path").attr("d", path).attr("fill", d.color).attr("transform","translate(" + translate + ",0)");
+            addActionSet(ear);
+            return ear;
+        }
+
+        private invokeRightAction<TElement extends AggregatingElement>(d: TElement, rightActionHandler: (elem: TElement) => void) {
             var isExpanded = d['children'], hasCollapsedChildren = d['_children'];
             var isLoadingError = d.pageRequest && d.pageRequest.isFailed;
             if (isExpanded || !isLoadingError && hasCollapsedChildren) {
@@ -578,31 +573,29 @@ module Ontology {
                 }
             }
 
-            var toRet = kiv.ui.NiceRoundRectangle({uText: classesString,
+            return kiv.ui.NiceRoundRectangle({uText: classesString,
                 lContainer: lContainerContents, color: d.color, marginX: (expanded)?0:20, marginXTop: 20, marginY: 5, borderSize: 2,
                 classUpperText: "headersInGraph"
             });
-            return toRet;
         }
 
         /**
          * Creates kiv.ui.SimpleText
          */
-        private fillObjectPropertyUI(d){
-            var toRet = kiv.ui.SimpleText({
+        private fillObjectPropertyUI(d: ObjProperty): kiv.ui.UIElement {
+            return kiv.ui.SimpleText({
                 text: d.name,
                 textClass: "paragraphHeaderGraph",
                 vertMargin: 5,
                 raze: true
             });
-            return toRet;
         }
 
         /**
          * Generate function which will be invoked if clicked on left ear of some element with d data
          */
         private leftAction() {
-            return (j: any) => {
+            return (j: Instance) => {
                 window.location.assign("/resource/?uri=" + encodeURIComponent(j.id).replace(/'/g,"%27").replace(/"/g,"%22"));
             };
         }
@@ -630,7 +623,7 @@ module Ontology {
         /**
          * Generate function which will be invoked if clicked on center of instance element
          */
-        private centerAction(d) {
+        private centerAction(d: Instance) {
             return () => {
                 if (!d.dpLoaded) {
                     d.dataIndicator = this.fillModelForIndicator();
@@ -644,7 +637,7 @@ module Ontology {
         /**
          * MUST be invoked after each request to maintain cache
          */
-        private updateCachedData(requestResult){
+        private updateCachedData(requestResult) {
             mergeProperties(this.Oclasses, requestResult['classes']);
             this.arrayOfClassVals = objToArrayValues(this.Oclasses);
             this.arrayOfClassKeys = objToArrayKeys(this.Oclasses);
@@ -734,17 +727,16 @@ module Ontology {
             };
         }
 
-        private expandOrCollapseChildren(parent) {
-            if (!('_children' in parent)) { parent._children = false; }
-            var isCollapsed = Boolean(parent._children);
+        private expandOrCollapseChildren(parent: AggregatingElement) {
+            if (!('_children' in parent)) { parent['_children'] = false; }
+            var isCollapsed = Boolean(parent['_children']);
             if (parent.pageIndicator) { parent.pageIndicator.visible(isCollapsed); }
-            if (isCollapsed) { parent.children = parent._children; parent._children = false; }
-            else { parent._children = parent.children; parent.children = false; }
+            if (isCollapsed) { parent.children = parent['_children']; parent['_children'] = false; }
+            else { parent['_children'] = parent.children; parent.children = <any>false; }
         }
 
         /**
          * First request which retrieves info about root element
-         * example: http://dbpedia.org/sparql$instanceGeneralInfo.InstanceGeneralInfoRequest$http://dbpedia.org/resource/Blackmore's_Night
          */
         private initialRootRequest(): kiv.SmartServerRequest {
             var indicator = WrapIndicator.wrap(this.svg);
@@ -767,21 +759,19 @@ module Ontology {
                     onError(e);
                 }
             };
-            var request = kiv.smartServerRequest({
+            return kiv.smartServerRequest({
                 request: "endpoint=" + this.sparqlEndpoint+"&requestType=instanceGeneralInfo.InstanceGeneralInfoRequest&idOfInstance="+this.idOfInstance,
                 url: this.service,
                 waitHandler: function(d){indicator.status(d);},
                 finishHandler: onFinish,
                 errorHandler: onError
             });
-            return request;
         }
 
         /**
          * Request for object properties page of an instance
-         * example: http://dbpedia.org/sparql$objPropsPage.ObjPropsPageRequest$http://dbpedia.org/resource/United_States$BOTH$1$10
          */
-        private requestForObjPropPage(instance, pageNum, currentLimit, indicator): kiv.SmartServerRequest {
+        private requestForObjPropPage(instance: Instance, pageNum: number, currentLimit: number, indicator: AbstractIndicator): kiv.SmartServerRequest {
             indicator.status("Loading...");
             var onError = (e: string) => {
                 indicator.error();
@@ -806,22 +796,17 @@ module Ontology {
                     onError(e);
                 }
             };
-            var request = kiv.smartServerRequest({
+            return kiv.smartServerRequest({
                 request: "endpoint=" + this.sparqlEndpoint+"&requestType=objPropsPage.ObjPropsPageRequest&idOfInstance="+instance.id+"&direction=BOTH&pageNum="+pageNum+"&currentLimit="+currentLimit,
                 url: this.service,
                 waitHandler: function(d) { indicator.status(d); },
                 finishHandler: onFinish,
                 errorHandler: onError
             });
-            return request;
         }
 
         /**
          * Request for instances of a particular object property (of a particular instance :))
-         * example: http://dbpedia.org/sparql$instsPage.InstsPageRequest$http://dbpedia.org/resource/United_States$IN$http://dbpedia.org/ontology/almaMater$1$503
-         *
-         * @param indicator {status: function(text), error: function(), remove: function()}
-         * @returns kiv.smartServerRequest object
          */
         private requestForInstances(objProperty: ObjProperty, pageNum: number, currentLimit: number, indicator: AbstractIndicator): kiv.SmartServerRequest {
             var instance = <Instance>objProperty.parent;
@@ -854,26 +839,26 @@ module Ontology {
                     indicator.error();
                 }
             };
-            var request = kiv.smartServerRequest({
+            return kiv.smartServerRequest({
                 request: "endpoint="+this.sparqlEndpoint+"&requestType=instsPage.InstsPageRequest&idOfInstance="+instance.id+"&direction="+objProperty.direction+"&objPropId="+objProperty.objPropId+"&pageNum="+pageNum+"&currentLimit="+currentLimit,
                 url: this.service,
                 waitHandler: function (d) { indicator.status(d); },
                 finishHandler: onFinish,
                 errorHandler: onError
             });
-            return request;
         }
 
-        private getChildren(parentModel) {
-            return parentModel.children || parentModel._children;
+        private getChildren(parentModel: AggregatingElement) {
+            return parentModel.children || parentModel["_children"];
         }
 
-        private discardPageElements(children, type) {
+        private discardPageElements(children: Element[], type: ElementType) {
             var hasPaginator = children.length > 0 && children[0].type == ElementType.paginator;
             if (hasPaginator) {
-                each (children, function (child) {
-                    if (child.type === type)
+                each(children, child => {
+                    if (child.type === type) {
                         child.wasDiscarded = true;
+                    }
                 });
             }
             children.length = hasPaginator ? 1 : 0; // keep paginator if exists
@@ -881,7 +866,6 @@ module Ontology {
 
         /**
          * Request for data properties
-         * example: http://dbpedia.org/sparql$instanceInfoWithDP.InstanceInfoWithDPRequest$http://dbpedia.org/resource/Blackmore's_Night
          */
         private requestForDataProperties(element: Instance, indicator: AbstractIndicator): kiv.SmartServerRequest {
             var onError = (e: string) => {
@@ -901,14 +885,13 @@ module Ontology {
                     onError(e);
                 }
             };
-            var request = kiv.smartServerRequest({
+            return kiv.smartServerRequest({
                 request: "endpoint="+this.sparqlEndpoint+"&requestType=instanceInfoWithDP.InstanceInfoWithDPRequest&idOfInstance="+element.id,
                 url: this.service,
-                waitHandler: function(d) { indicator.status(d); },
+                waitHandler: (d: string) => { indicator.status(d); },
                 finishHandler: onFinish,
                 errorHandler: onError
             });
-            return request;
         }
     }
 }
@@ -921,7 +904,7 @@ declare var $: {
 };
 
 var pageViewer: Ontology.PagedViewer;
-function startIt(containerID: string, service: string, endpoint: string, idOfInstance: string){
+function startIt(containerID: string, service: string, endpoint: string, idOfInstance: string) {
     pageViewer = new Ontology.PagedViewer($(window).width()-20, $(window).height()-20);
     pageViewer.render(document.getElementById(containerID), idOfInstance, endpoint, service);
 }
