@@ -22,18 +22,18 @@
     </servlet>
     <servlet-mapping>
         <servlet-name>PageViewer</servlet-name>
-        <url-pattern>/aov/pageviewer/*</url-pattern>
+        <url-pattern>/pageviewer/*</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>RootViewer</servlet-name>
-        <url-pattern>/aov/rootviewer/*</url-pattern>
+        <url-pattern>/rootviewer/*</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>Mirror</servlet-name>
-        <url-pattern>/aov/mirror/</url-pattern>
+        <url-pattern>/mirror/</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>Help</servlet-name>
-        <url-pattern>/aov/help/*</url-pattern>
+        <url-pattern>/help/*</url-pattern>
     </servlet-mapping>
 </web-app>

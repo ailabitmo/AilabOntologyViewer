@@ -1,27 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module type="JAVA_MODULE" version="4">
-  <component name="FacetManager">
-    <facet type="web" name="Web">
-      <configuration>
-        <descriptors>
-          <deploymentDescriptor name="web.xml" url="file://$MODULE_DIR$/web/WEB-INF/web.xml" />
-        </descriptors>
-        <webroots>
-          <root url="file://$MODULE_DIR$/web" relative="/" />
-        </webroots>
-      </configuration>
-    </facet>
-    <facet type="web" name="Web2">
-      <configuration>
-        <descriptors>
-          <deploymentDescriptor name="web.xml" url="file://$MODULE_DIR$/src/ru/ifmo/ailab/ontology/viewer/base/imp/pageViewer/ontoModel/models/dataprops/DataPropertyValue.java" />
-        </descriptors>
-        <webroots>
-          <root url="file://$MODULE_DIR$/src/ru/ifmo/ailab/ontology/viewer/base/imp/rootviewer/ontoModel" relative="/WEB-INF" />
-        </webroots>
-      </configuration>
-    </facet>
-  </component>
   <component name="NewModuleRootManager" inherit-compiler-output="true">
     <exclude-output />
     <content url="file://$MODULE_DIR$">
@@ -34,4 +12,3 @@
     <orderEntry type="library" name="generalLib" level="project" />
   </component>
 </module>
-
